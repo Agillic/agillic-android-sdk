@@ -1,16 +1,13 @@
-package com.schafroth.kotlibapp
+package com.agillic.kotlibapp
 
-import android.app.Application
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.findNavController
-import com.agillic.app.sdk.AgillicSDK
-import com.agillic.app.sdk.PageView
+import com.agillic.app.sdk.events.PageView
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.

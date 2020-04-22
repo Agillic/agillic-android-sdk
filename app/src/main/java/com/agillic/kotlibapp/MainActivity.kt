@@ -1,4 +1,4 @@
-package com.schafroth.kotlibapp
+package com.agillic.kotlibapp
 
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -8,7 +8,6 @@ import android.view.Menu
 import android.view.MenuItem
 import com.agillic.app.sdk.AgillicSDK
 import com.agillic.app.sdk.AgillicTracker
-import com.snowplowanalytics.snowplow.tracker.*
 
 import kotlinx.android.synthetic.main.activity_main.*
 

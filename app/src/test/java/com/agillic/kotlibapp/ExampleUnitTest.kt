@@ -1,4 +1,4 @@
-package com.schafroth.kotlibapp
+package com.agillic.kotlibapp
 
 import org.junit.Test
 

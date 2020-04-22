@@ -1,4 +1,4 @@
-package com.schafroth.kotlibapp
+package com.agillic.kotlibapp
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.navigation.fragment.findNavController
-import com.agillic.app.sdk.PageView
+import com.agillic.app.sdk.events.PageView
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.

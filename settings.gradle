@@ -1,2 +1,3 @@
-rootProject.name='My Application'
+rootProject.name='Agillic Android'
 include ':app'
+include ':agillic-android-sdk'

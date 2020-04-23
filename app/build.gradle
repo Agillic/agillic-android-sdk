@@ -37,11 +37,10 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project (path : ':agillic-android-sdk')
+    implementation fileTree(dir: 'libs', include: ['*.jar','*.aar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     //implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'android.arch.lifecycle:livedata:1.1.1'
     implementation 'android.arch.lifecycle:viewmodel:1.1.1'
     implementation 'androidx.core:core-ktx:1.2.0'
@@ -53,4 +52,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation 'com.github.schafdog:AndroidSDK:1.0.0'
+    //implementation project (path : ':agillic-android-sdk')
+    // implementation 'com.github.dennis-agillic:agillic-android-sdk:master-SNAPSHOT'
 }

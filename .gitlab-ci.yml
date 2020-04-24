@@ -1,0 +1,95 @@
+cache:
+  paths:
+    - cache/
+
+stages:
+  - snapshot
+  - test
+  - release
+#  - s3_upload
+#  - docker
+
+snapshot:
+  image: registry.agillic.net/operations/docker-gradle-jdk8:latest
+  stage: snapshot
+  script:
+    - env
+    - ./gradlew install 
+
+  image: registry.agillic.net/operations/docker-gradle-jdk8:latest
+  stage: sonar
+  script:
+    - './gradle test'
+  only:
+    - master
+
+release:
+  image: registry.agillic.net/operations/docker-gradle-jdk8:latest
+  stage: release
+  script:
+    - 'echo releasing' 
+  only:
+    - tags
+  except:
+    - /\d+\.\d+\.\d+-.*/
+    - branches
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - target/
+
+docker_staging:
+  image: registry.agillic.net/operations/gitlab-docker:latest
+  stage: docker
+  script:
+    - 'echo docker_staging'
+  environment:
+    name: staging
+  only:
+    - tags
+  except:
+    - /\d+\.\d+\.\d+-.*/
+    - branches
+
+swagger_staging:
+  image: registry.agillic.net/operations/s3cmd:latest
+  stage: swagger
+  script:
+    - 's3cmd --access_key=${DEVPORTAL_STAG_S3_ACCESS_KEY} --secret_key=${DEVPORTAL_STAG_S3_SECRET_KEY} --add-header "Cache-Control: max-age=600" put target/classes/static/recipients/docs/swagger.json s3://agillic-devportal-staging/swagger/recipients.json'
+    - 's3cmd --access_key=${DEVPORTAL_STAG_S3_ACCESS_KEY} --secret_key=${DEVPORTAL_STAG_S3_SECRET_KEY} setacl s3://agillic-devportal-staging/swagger/recipients.json --acl-public'
+  environment:
+    name: staging
+  only:
+    - tags
+  except:
+    - /\d+\.\d+\.\d+-.*/
+    - branches
+
+docker_production:
+  image: registry.agillic.net/operations/gitlab-docker:latest
+  stage: docker
+  script:
+    - '/root/gitlab-ci-docker.sh stable'
+  environment:
+    name: production
+  when: manual
+  only:
+    - tags
+  except:
+    - /\d+\.\d+\.\d+-.*/
+    - branches
+
+swagger_production:
+  image: registry.agillic.net/operations/s3cmd:latest
+  stage: swagger
+  script:
+    - 's3cmd --access_key=${DEVPORTAL_PROD_S3_ACCESS_KEY} --secret_key=${DEVPORTAL_PROD_S3_SECRET_KEY} --add-header "Cache-Control: max-age=600" put target/classes/static/recipients/docs/swagger.json s3://agillic-devportal-production/swagger/recipients.json'
+    - 's3cmd --access_key=${DEVPORTAL_PROD_S3_ACCESS_KEY} --secret_key=${DEVPORTAL_PROD_S3_SECRET_KEY} setacl s3://agillic-devportal-production/swagger/recipients.json --acl-public'
+  environment:
+    name: production
+  when: manual
+  only:
+    - tags
+  except:
+    - /\d+\.\d+\.\d+-.*/
+    - branches

@@ -17,7 +17,7 @@ snapshot:
   image: registry.agillic.net/operations/docker-gradle-jdk8:latest
   stage: sonar
   script:
-    - './gradle test'
+    - './gradlew test'
   only:
     - master
 

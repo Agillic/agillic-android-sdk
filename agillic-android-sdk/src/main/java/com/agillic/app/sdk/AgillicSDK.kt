@@ -61,7 +61,7 @@ class AgillicSDK private constructor() {
         clientAppVersion: String?,
         solutionId: String,
         userId: String,
-        apnToken: String?,
+        pnToken: String?,
         context: Context
     ): AgillicTracker {
         //service = Executors.newSingleThreadExecutor();
@@ -80,7 +80,7 @@ class AgillicSDK private constructor() {
             context
         )
         val deviceInfo = Util.getMobileContext(context)
-        RegisterTask(tracker, clientAppId, clientAppVersion, userId, auth, apnToken, deviceInfo).execute(url)
+        RegisterTask(tracker, clientAppId, clientAppVersion, userId, auth, pnToken, deviceInfo).execute(url)
 
         return AgillicTrackerImpl(tracker)
     }
@@ -112,6 +112,7 @@ class AgillicSDK private constructor() {
     ) : AsyncTask<String, Int, String>()
     {
         override fun doInBackground(vararg urls: String): String? {
+            // Can remove loop: Session sesion = tracker.session.loadFromFileFuture.get()
             while (! tracker.session.waitForSessionFileLoad()) {
                 Logger.getLogger(this.javaClass.name).warning("Session still not loaded")
             }

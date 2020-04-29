@@ -16,8 +16,8 @@ class MainActivity : AppCompatActivity() {
     var clientAppId : String = "someClientAppId" // This Applications unique id.
     var clientAppVersion : String? = "1.0" // This Applications version
     var userId : String = "dennis.schafroth@agillic.com" // Retrieved from login
-    var solutionId : String = "qrcqkw" // Passed down in/after login;
     var apnToken : String? = null
+    var solutionId : String = "qrcqkw" // Passed down in/after login;
     var key = "MwtOtOMAeJqs"
     var secret = "znwVurQAf1AO9qvd"
     var tracker : AgillicTracker? = null;

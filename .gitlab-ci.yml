@@ -1,28 +1,35 @@
-cache:
-  paths:
-    - cache/
+image: registry.agillic.net/development-tools/gitlab-ci-android
 
 stages:
-  - snapshot
-  - sonar
-  - release
+- build
+- snapshot
+- release
+
+before_script:
+- export GRADLE_USER_HOME=$(pwd)/.gradle
+- chmod +x ./gradlew
+
+cache:
+  key: ${CI_PROJECT_ID}
+  paths:
+  - .gradle/
+
+build:
+  stage: build
+  script:
+  - ./gradlew assembleDebug
+  artifacts:
+    paths:
+    - app/build/outputs/apk/debug/app-debug.apk
+    - agillic-android-sdk/build/outputs/aar/
 
 snapshot:
-  image: registry.agillic.net/operations/docker-gradle-jdk8:latest
   stage: snapshot
   script:
     - 'env'
     - './gradlew install'
 
-  image: registry.agillic.net/operations/docker-gradle-jdk8:latest
-  stage: sonar
-  script:
-    - './gradlew test'
-  only:
-    - master
-
 release:
-  image: registry.agillic.net/operations/docker-gradle-jdk8:latest
   stage: release
   script:
     - 'echo releasing' 

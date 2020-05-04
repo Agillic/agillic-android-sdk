@@ -1,7 +1,9 @@
 package com.agillic.kotlibapp
 
+import android.app.Activity
 import android.os.Bundle
 import android.os.PersistableBundle
+import android.util.DisplayMetrics
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
@@ -13,7 +15,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     // From build properties
-    var clientAppId : String = "someClientAppId" // This Applications unique id.
+    var clientAppId : String = "someAndroidAppId" // This Applications unique id.
     var clientAppVersion : String? = "1.0" // This Applications version
     var userId : String = "dennis.schafroth@agillic.com" // Retrieved from login
     var apnToken : String? = null
@@ -24,9 +26,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val displayMetrics = DisplayMetrics()
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         var sdk = AgillicSDK.instance
         sdk.init(key, secret)
-        tracker = sdk.register(clientAppId, clientAppVersion, solutionId, userId, apnToken, applicationContext)
+        tracker = sdk.register(clientAppId, clientAppVersion, solutionId, userId, apnToken, applicationContext, displayMetrics)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 

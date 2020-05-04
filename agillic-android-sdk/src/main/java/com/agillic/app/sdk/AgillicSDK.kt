@@ -1,8 +1,10 @@
 package com.agillic.app.sdk
 
+import android.app.Activity
 import android.content.Context
 import android.os.AsyncTask
 import android.os.Build
+import android.util.DisplayMetrics
 import com.snowplowanalytics.snowplow.tracker.DevicePlatforms
 import com.snowplowanalytics.snowplow.tracker.Emitter
 import com.snowplowanalytics.snowplow.tracker.Emitter.EmitterBuilder
@@ -62,7 +64,8 @@ class AgillicSDK private constructor() {
         solutionId: String,
         userId: String,
         pnToken: String?,
-        context: Context
+        context: Context,
+        displayMetrics: DisplayMetrics?
     ): AgillicTracker {
         //service = Executors.newSingleThreadExecutor();
         // service.shutdown();
@@ -80,7 +83,7 @@ class AgillicSDK private constructor() {
             context
         )
         val deviceInfo = Util.getMobileContext(context)
-        RegisterTask(tracker, clientAppId, clientAppVersion, userId, auth, pnToken, deviceInfo).execute(url)
+        RegisterTask(tracker, clientAppId, clientAppVersion, userId, auth, pnToken, deviceInfo, displayMetrics).execute(url)
 
         return AgillicTrackerImpl(tracker)
     }
@@ -108,7 +111,8 @@ class AgillicSDK private constructor() {
         var userId: String,
         var auth: BasicAuth?,
         var appToken: String?,
-        var deviceInfo: SelfDescribingJson
+        var deviceInfo: SelfDescribingJson,
+        var displayMetrics: DisplayMetrics?
     ) : AsyncTask<String, Int, String>()
     {
         override fun doInBackground(vararg urls: String): String? {
@@ -128,6 +132,8 @@ class AgillicSDK private constructor() {
 
                             @Throws(IOException::class)
                             override fun writeTo(bufferedSink: BufferedSink) {
+                                val deviceInfoData = deviceInfo.map["data"] as Map<String, String>
+                                val deviceModel = deviceInfoData["deviceModel"]
                                 val json = String.format(
                                     "{\n" +
                                             "  \"appInstallationId\" : \"%s\",\n" +
@@ -135,17 +141,17 @@ class AgillicSDK private constructor() {
                                             "  \"clientAppVersion\": %s,\n" +
                                             "  \"deviceModel\": %s,\n" +
                                             "  \"pushNotificationToken\": %s,\n" +
-                                            "  \"modelDimX\": %s,\n" +
-                                            "  \"modelDimY\": %s,\n" +
+                                            "  \"modelDimX\": %d,\n" +
+                                            "  \"modelDimY\": %d,\n" +
                                             " \"last\": null" +
                                             "  }\n",
                                     tracker.session.userId,
                                     emptyIfNull(clientAppId),
                                     emptyIfNull(clientAppVersion),
-                                    emptyIfNull(deviceInfo.map["model"] as String?),
+                                    emptyIfNull(deviceModel),
                                     emptyIfNull(appToken),
-                                    emptyIfNull(deviceInfo.map["dimX"] as String?),
-                                    emptyIfNull(deviceInfo.map["dimY"] as String?)
+                                    displayMetrics?.widthPixels,
+                                    displayMetrics?.heightPixels
                                 )
                                 bufferedSink.write(json.toByteArray())
                             }

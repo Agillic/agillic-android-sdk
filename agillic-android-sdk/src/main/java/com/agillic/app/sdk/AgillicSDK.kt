@@ -15,6 +15,7 @@ import com.snowplowanalytics.snowplow.tracker.Tracker.TrackerBuilder
 import com.snowplowanalytics.snowplow.tracker.emitter.BufferOption
 import com.snowplowanalytics.snowplow.tracker.emitter.HttpMethod
 import com.snowplowanalytics.snowplow.tracker.emitter.RequestCallback
+import com.snowplowanalytics.snowplow.tracker.emitter.RequestSecurity
 import com.snowplowanalytics.snowplow.tracker.payload.SelfDescribingJson
 import com.snowplowanalytics.snowplow.tracker.utils.Util
 import okhttp3.MediaType
@@ -30,7 +31,8 @@ import java.util.logging.Logger
 
 class AgillicSDK private constructor() {
     private var url: String
-    private val collectorEndpoint = "https://snowplowtrack-eu1.agillic.net"
+    private var requestSecurity = RequestSecurity.HTTPS
+    private var collectorEndpoint = "snowplowtrack-eu1.agillic.net"
     private val service: ExecutorService? = null
     private var auth: BasicAuth? = null
 
@@ -44,6 +46,21 @@ class AgillicSDK private constructor() {
 
     fun setApi(api: String) {
         url = api
+    }
+
+    fun setCollector(endpoint: String) {
+        requestSecurity =  RequestSecurity.HTTPS
+        collectorEndpoint = endpoint
+        val protocol = "http://"
+        val httpsString = "https://"
+
+        if (endpoint.startsWith(protocol)) {
+            collectorEndpoint = endpoint.substring(7)
+            requestSecurity = RequestSecurity.HTTP
+        } else if (endpoint.startsWith(httpsString)) {
+            collectorEndpoint = endpoint.substring(httpsString.length)
+            requestSecurity = RequestSecurity.HTTPS
+        }
     }
 
     fun init(key: String, secret: String) {
@@ -139,6 +156,8 @@ class AgillicSDK private constructor() {
                                             "  \"appInstallationId\" : \"%s\",\n" +
                                             "  \"clientAppId\": %s ,\n" +
                                             "  \"clientAppVersion\": %s,\n" +
+                                            "  \"osName\": %s ,\n" +
+                                            "  \"osVersion\": %s ,\n" +
                                             "  \"deviceModel\": %s,\n" +
                                             "  \"pushNotificationToken\": %s,\n" +
                                             "  \"modelDimX\": %d,\n" +
@@ -148,6 +167,8 @@ class AgillicSDK private constructor() {
                                     tracker.session.userId,
                                     emptyIfNull(clientAppId),
                                     emptyIfNull(clientAppVersion),
+                                    "android",
+                                    Build.VERSION.SDK_INT,
                                     emptyIfNull(deviceModel),
                                     emptyIfNull(appToken),
                                     displayMetrics?.widthPixels,
@@ -204,7 +225,8 @@ class AgillicSDK private constructor() {
     protected fun createEmitter(url: String?, context: Context?): Emitter {
         // build an emitter, this is used by the tracker to batch and schedule transmission of events
         return EmitterBuilder(url, context)
-            .method(HttpMethod.POST)
+            .method(HttpMethod.GET)
+            .security(requestSecurity)
             .callback(object : RequestCallback {
                 // let us know on successes (may be called multiple times)
                 override fun onSuccess(successCount: Int) {
@@ -219,7 +241,7 @@ class AgillicSDK private constructor() {
                     System.err.println("Successfully sent " + successCount + " events; failed to send " + failedCount + " events")
                 }
             })
-            .option(BufferOption.DefaultGroup)
+            .option(BufferOption.Single)
             .build()
     }
 
@@ -235,6 +257,7 @@ class AgillicSDK private constructor() {
             .base64(true) //
             .sessionContext(true)
             .sessionCheckInterval(15)
+            .platform(DevicePlatforms.Mobile)
             //.sessionCallbacks()
             .mobileContext(true)
             .geoLocationContext(true)

@@ -19,27 +19,43 @@ class MainActivity : AppCompatActivity() {
     var clientAppVersion : String? = "1.0" // This Applications version
     var userId : String = "dennis.schafroth@agillic.com" // Retrieved from login
     var apnToken : String? = null
-    var solutionId : String = "qrcqkw" // Passed down in/after login;
-    var key = "MwtOtOMAeJqs"
-    var secret = "znwVurQAf1AO9qvd"
+    var solutionId : String = "15arnn5" // Passed down in/after login;
+    var key = "F6xRABtMVG9h"
+    var secret = "yOdwUJlBB6g9kZoi"
     var tracker : AgillicTracker? = null;
+    var sdk: AgillicSDK? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val displayMetrics = DisplayMetrics()
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        var sdk = AgillicSDK.instance
-        sdk.init(key, secret)
-        tracker = sdk.register(clientAppId, clientAppVersion, solutionId, userId, apnToken, applicationContext, displayMetrics)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-
+        //initAgillicSDK()
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
     }
 
+    fun initAgillicSDK() {
+        synchronized(this) {
+            if (sdk == null) {
+                sdk = AgillicSDK.instance
+                sdk!!.init(key, secret)
+                //sdk!!.setCollector("https://snowplowreader-eu1.agillic.net");
+            }
+            val displayMetrics = DisplayMetrics()
+            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            tracker = sdk!!.register(
+                clientAppId,
+                clientAppVersion,
+                solutionId,
+                userId,
+                apnToken,
+                applicationContext,
+                displayMetrics
+            )
+        }
+    }
     override fun onStart() {
         super.onStart()
     }

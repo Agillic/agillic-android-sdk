@@ -1,3 +1,7 @@
+include ':app_msg'
+include ':internal:chooserx'
+include ':internal:lint'
+include ':internal:lintchecks'
 rootProject.name='Agillic Android'
 include ':app'
 include ':agillic-android-sdk'

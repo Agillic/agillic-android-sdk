@@ -7,8 +7,6 @@ abstract class CommonEvent : Event {
         private set
     var title: String? = null
         private set
-    var event: String? = null
-        private set
 
     fun name(name: String?): CommonEvent {
         this.name = name
@@ -17,11 +15,6 @@ abstract class CommonEvent : Event {
 
     fun title(title: String?): CommonEvent {
         this.title = title
-        return this
-    }
-
-    fun event(event: String?): CommonEvent {
-        this.event = event
         return this
     }
 }

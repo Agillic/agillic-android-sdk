@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.AsyncTask
 import android.os.Build
 import android.util.DisplayMetrics
+import android.util.Log
 import com.snowplowanalytics.snowplow.tracker.DevicePlatforms
 import com.snowplowanalytics.snowplow.tracker.Emitter
 import com.snowplowanalytics.snowplow.tracker.Emitter.EmitterBuilder
@@ -35,6 +36,16 @@ class AgillicSDK private constructor() {
     private var collectorEndpoint = "snowplowtrack-eu1.agillic.net"
     private val service: ExecutorService? = null
     private var auth: BasicAuth? = null
+
+    companion object {
+        private const val apiUrlFormat = "https://api%s-eu1.agillic.net"
+        val instance: AgillicSDK
+            get() = AgillicSDK()
+    }
+
+    init {
+        url = String.format(apiUrlFormat, "")
+    }
 
     fun setDevApi() {
         url = String.format(apiUrlFormat, "dev")
@@ -152,28 +163,28 @@ class AgillicSDK private constructor() {
                                 val deviceInfoData = deviceInfo.map["data"] as Map<String, String>
                                 val deviceModel = deviceInfoData["deviceModel"]
                                 val json = String.format(
-                                    "{\n" +
+                                            "{\n" +
                                             "  \"appInstallationId\" : \"%s\",\n" +
                                             "  \"clientAppId\": %s ,\n" +
                                             "  \"clientAppVersion\": %s,\n" +
-                                            "  \"osName\": %s ,\n" +
+                                            "  \"osName\": \"%s\" ,\n" +
                                             "  \"osVersion\": %s ,\n" +
                                             "  \"deviceModel\": %s,\n" +
                                             "  \"pushNotificationToken\": %s,\n" +
                                             "  \"modelDimX\": %d,\n" +
-                                            "  \"modelDimY\": %d,\n" +
-                                            " \"last\": null" +
-                                            "  }\n",
+                                            "  \"modelDimY\": %d\n" +
+                                            "}\n",
                                     tracker.session.userId,
                                     emptyIfNull(clientAppId),
                                     emptyIfNull(clientAppVersion),
-                                    "android",
-                                    Build.VERSION.SDK_INT,
+                                    Util.getOsType(),
+                                    Util.getOsVersion(),
                                     emptyIfNull(deviceModel),
                                     emptyIfNull(appToken),
                                     displayMetrics?.widthPixels,
                                     displayMetrics?.heightPixels
                                 )
+                                Log.d("register",requestUrl + ": " + json)
                                 bufferedSink.write(json.toByteArray())
                             }
                         }).build()
@@ -185,8 +196,8 @@ class AgillicSDK private constructor() {
                                 val response = client.newCall(request).execute()
                                 if (response.isSuccessful) return "OK"
                                 if (response.code() < 500) {
-                                    val msg = "Client error: " + response.code()
-                                    println(msg)
+                                    val msg = "Client error: " + response.code() + " " + response.body().toString()
+                                    Log.e("register", "doInBackground: " + msg)
                                     return msg
                                 }
                             } catch (ignored: IOException) {
@@ -199,10 +210,10 @@ class AgillicSDK private constructor() {
                     }
                 }
             } catch (ex: Exception) {
-                println("Failed to run registration: " + ex.message)
+                Log.e("register", "Failed to run registration: " + ex.message)
                 throw ex
             }
-            println("Stopping registration.")
+            Log.d("register", "Stopping registration.")
             return "Stopping"
         }
     }
@@ -230,7 +241,7 @@ class AgillicSDK private constructor() {
             .callback(object : RequestCallback {
                 // let us know on successes (may be called multiple times)
                 override fun onSuccess(successCount: Int) {
-                    println("Successfully sent $successCount events")
+                    Log.d("AgillicSDK:emitter", "Successfully sent $successCount events")
                 }
 
                 // let us know if something has gone wrong (may be called multiple times)
@@ -238,7 +249,7 @@ class AgillicSDK private constructor() {
                     successCount: Int,
                     failedCount: Int
                 ) {
-                    System.err.println("Successfully sent " + successCount + " events; failed to send " + failedCount + " events")
+                    Log.e("AgillicSDK:emitter","Successfully sent " + successCount + " events; failed to send " + failedCount + " events")
                 }
             })
             .option(BufferOption.Single)
@@ -263,15 +274,5 @@ class AgillicSDK private constructor() {
             .geoLocationContext(true)
             .platform(DevicePlatforms.Mobile)
             .build()
-    }
-
-    companion object {
-        private const val apiUrlFormat = "https://api%s-eu1.agillic.net"
-        val instance: AgillicSDK
-            get() = AgillicSDK()
-    }
-
-    init {
-        url = String.format(apiUrlFormat, "")
     }
 }

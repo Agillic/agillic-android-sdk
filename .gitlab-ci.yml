@@ -10,8 +10,8 @@ variables:
   
 stages:
 - build
-- snapshot
 - deploy
+- snapshot
 - release
 
 before_script:
@@ -29,6 +29,7 @@ build:
   script:
   - ./gradlew assembleDebug
   artifacts:
+    expire_in: 10 mins
     paths:
     - app/build/outputs/apk/
     - agillic-android-sdk/build/outputs/aar/
@@ -39,6 +40,11 @@ snapshot:
   script:
     - 'env'
     - './gradlew install'
+  artifacts:
+    expire_in: 10 mins
+    paths:
+    - app/build/outputs/apk/
+    - agillic-android-sdk/build/outputs/aar/
 
 deploy_s3_stag:
   image: registry.agillic.net/operations/s3cmd:latest

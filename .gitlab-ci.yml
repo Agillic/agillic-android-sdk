@@ -49,7 +49,7 @@ deploy_s3_stag:
   stage: deploy
   script:
     - 'echo ${S3_STAG_ACCESS}'
-    - 's3cmd ${S3_STAG_ACCESS} cp agillic-android-sdk/build/outputs/aar/*.aar --add-header "Cache-Control: max-age=600" ${S3_STAG_URL}/sdk/'
+    - 's3cmd ${S3_STAG_ACCESS} put agillic-android-sdk/build/outputs/aar/*.aar --add-header "Cache-Control: max-age=600" ${S3_STAG_URL}/sdk/'
     - 's3cmd ${S3_STAG_ACCESS} setacl --acl-public --recursive ${S3_STAG_URL}/sdk/'
   only:
     - master

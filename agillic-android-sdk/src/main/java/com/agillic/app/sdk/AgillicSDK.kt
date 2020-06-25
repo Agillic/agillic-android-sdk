@@ -124,7 +124,7 @@ class AgillicSDK private constructor() {
         private var basicAuth: String = "Basic " + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Base64.getEncoder().encodeToString("$key:$secret".toByteArray())
         } else {
-            android.util.Base64.encodeToString("$key:$secret".toByteArray(), android.util.Base64.DEFAULT);
+            android.util.Base64.encodeToString("$key:$secret".toByteArray(), android.util.Base64.NO_WRAP);
         }
 
         fun getAuth(): String {
@@ -178,7 +178,7 @@ class AgillicSDK private constructor() {
                                     emptyIfNull(clientAppId),
                                     emptyIfNull(clientAppVersion),
                                     Util.getOsType(),
-                                    Util.getOsVersion(),
+                                    emptyIfNull(Util.getOsVersion()),
                                     emptyIfNull(deviceModel),
                                     emptyIfNull(appToken),
                                     displayMetrics?.widthPixels,

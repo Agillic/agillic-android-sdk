@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.github.dcendents.android-maven'
 apply from: file('../publish.gradle')
-group='com.agillic.app.sdk'
+// group='com.agillic.app.sdk'
 
 android {
     compileSdkVersion 29

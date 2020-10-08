@@ -4,36 +4,59 @@ import android.app.Activity
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.DisplayMetrics
+import android.util.Log
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
+import com.google.android.gms.tasks.OnCompleteListener
 import com.agillic.app.sdk.AgillicSDK
 import com.agillic.app.sdk.AgillicTracker
+import com.google.firebase.FirebaseApp
+import com.google.firebase.iid.FirebaseInstanceId
 
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     // From build properties
-    var clientAppId : String = "someAndroidAppId" // This Applications unique id.
+    var clientAppId : String = "httpV1" // This Applications unique id.
     var clientAppVersion : String? = "1.0" // This Applications version
     var userId : String = "dennis.schafroth@agillic.com" // Retrieved from login
     var apnToken : String? = null
     var solutionId : String = "15arnn5" // Passed down in/after login;
-    var key = "F6xRABtMVG9h"
-    var secret = "yOdwUJlBB6g9kZoi"
+    var key = "VIP4hwIKU1GZ"
+    var secret = "gUItpLA0U0PGsvYZ"
     var tracker : AgillicTracker? = null;
     var sdk: AgillicSDK? = null
+    var TAG = "MainActivity";
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+        FirebaseApp.initializeApp(applicationContext)
         //initAgillicSDK()
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
+        FirebaseInstanceId.getInstance().instanceId
+            .addOnCompleteListener(OnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w(TAG, "getInstanceId failed", task.exception)
+                    return@OnCompleteListener
+                }
+
+                // Get new Instance ID token
+                apnToken = task.result?.token
+
+                // Log and toast
+                val msg = getString(R.string.msg_token_fmt, apnToken)
+                Log.d(TAG, msg)
+                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+            })
+
     }
 
     fun initAgillicSDK() {

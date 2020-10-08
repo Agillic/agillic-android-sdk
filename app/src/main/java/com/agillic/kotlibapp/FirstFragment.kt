@@ -19,7 +19,7 @@ import com.agillic.app.sdk.events.PageView
 class FirstFragment : Fragment() {
 
     var mainActivity : MainActivity? = null
-    var UUID = "11111111-583e-42e9-aab7-1ebe018c874e" // Some unique but fixed
+    var UUID = "11111111-583e-42e9-aab7-1ebe018c874e" // Some unique id for the fragment
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
             savedInstanceState: Bundle?

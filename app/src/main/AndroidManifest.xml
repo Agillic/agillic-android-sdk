@@ -22,7 +22,14 @@
 
             </intent-filter>
         </activity>
-
+        <service
+            android:name=".AgillicFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
     <uses-permission android:name="android.permission.INTERNET"/>
+
 </manifest>

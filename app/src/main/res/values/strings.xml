@@ -13,4 +13,5 @@
     <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>
     <string name="fcm_message">FCM Message</string>
     <string name="msg_token_fmt" translatable="false">InstanceID Token: %s</string>
+    <string name="onclick_action" translatable="false">OPEN_ACTIVITY_1</string>
 </resources>

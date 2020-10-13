@@ -1,22 +1,25 @@
 package com.agillic.kotlibapp
 
-import android.app.Activity
+import com.agillic.kotlibapp.R
+import android.app.AlertDialog
+import android.content.*
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.DisplayMetrics
 import android.util.Log
-import com.google.android.material.snackbar.Snackbar
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
-import com.google.android.gms.tasks.OnCompleteListener
+import androidx.appcompat.app.AppCompatActivity
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.agillic.app.sdk.AgillicSDK
 import com.agillic.app.sdk.AgillicTracker
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.FirebaseApp
 import com.google.firebase.iid.FirebaseInstanceId
-
 import kotlinx.android.synthetic.main.activity_main.*
+
 
 class MainActivity : AppCompatActivity() {
     // From build properties
@@ -30,13 +33,46 @@ class MainActivity : AppCompatActivity() {
     var tracker : AgillicTracker? = null;
     var sdk: AgillicSDK? = null
     var TAG = "MainActivity";
+    private val lbm by lazy { LocalBroadcastManager.getInstance(this) }
+    private val tokenListener = object : BroadcastReceiver() {
+        override fun onReceive(ctx: Context, data: Intent) {
+            var newToken = data.getStringExtra("token")
+            if (newToken != null) {
+                apnToken = newToken
+                initAgillicSDK();
+            } else if (data.getStringExtra("onclick") != null) {
+                Toast.makeText(applicationContext,data.getStringExtra("onclick"),Toast.LENGTH_LONG).show()
+                //showAlertDialog(data)
+            }
+        }
+    }
 
+    fun showAlertDialog(data: Intent) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Got onclick")
+        //set message for alert dialog
+        builder.setMessage(data.getStringExtra("onclick"))
+        builder.setIcon(android.R.drawable.ic_dialog_alert)
+
+        //performing positive action
+        builder.setPositiveButton("Dismiss") {_, _ ->
+            Toast.makeText(applicationContext,"clicked yes",Toast.LENGTH_LONG).show()
+        }
+        // Create the AlertDialog
+        val alertDialog: AlertDialog = builder.create()
+        // Set other dialog properties
+        alertDialog.setCancelable(false)
+        alertDialog.show()
+
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        FirebaseApp.initializeApp(applicationContext)
-        //initAgillicSDK()
+        //var app = FirebaseApp.initializeApp(applicationContext)
+        lbm.registerReceiver(tokenListener, IntentFilter(getString(R.string.onclick_action)))
+
+
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
@@ -67,7 +103,8 @@ class MainActivity : AppCompatActivity() {
                 //sdk!!.setCollector("https://snowplowreader-eu1.agillic.net");
             }
             val displayMetrics = DisplayMetrics()
-            getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            windowManager.getDefaultDisplay().getMetrics(displayMetrics);
+            //applicationContext.display.getRealMetrics(displayMetrics)
             tracker = sdk!!.register(
                 clientAppId,
                 clientAppVersion,
@@ -79,6 +116,12 @@ class MainActivity : AppCompatActivity() {
             )
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        lbm.unregisterReceiver(tokenListener)
+    }
+
     override fun onStart() {
         super.onStart()
     }
@@ -102,6 +145,24 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    fun displayAlert(context: Context, respMsg: String?) {
+        try {
+            val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+            builder.setCancelable(false)
+            builder.setPositiveButton("OK", DialogInterface.OnClickListener { _, _ ->
+                val splashIntent = Intent(context, MainActivity::class.java)
+                splashIntent.flags =
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                context.startActivity(splashIntent)
+            })
+            builder.setTitle("" + context.getString(R.string.app_name))
+            builder.setMessage(respMsg)
+            builder.create().show()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 }

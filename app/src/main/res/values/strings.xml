@@ -2,7 +2,7 @@
     <string name="app_name">Agillic Demo</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
-    <string name="login">Login</string>
+    <string name="login">Register</string>
     <string name="second_fragment_label">Second App View</string>
     <string name="next">Next Page</string>
     <string name="previous">Previous</string>
@@ -14,4 +14,9 @@
     <string name="fcm_message">FCM Message</string>
     <string name="msg_token_fmt" translatable="false">InstanceID Token: %s</string>
     <string name="onclick_action" translatable="false">OPEN_ACTIVITY_1</string>
+    <string-array name="solutions">
+        <item>trunc-stag</item>
+        <item>cypress-stag</item>
+        <item>truncint-stag</item>
+    </string-array>
 </resources>

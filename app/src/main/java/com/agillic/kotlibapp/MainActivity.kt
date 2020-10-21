@@ -27,10 +27,8 @@ class MainActivity : AppCompatActivity() {
     var clientAppVersion : String? = "1.0" // This Applications version
     var userId : String = "dennis.schafroth@agillic.com" // Retrieved from login
     var apnToken : String? = null
-    var solutionId : String = "15arnn5" // Passed down in/after login;
-    var key = "VIP4hwIKU1GZ"
-    var secret = "gUItpLA0U0PGsvYZ"
     var tracker : AgillicTracker? = null;
+    var solutionName : String = "trunc-stag"
     var sdk: AgillicSDK? = null
     var TAG = "MainActivity";
     private val lbm by lazy { LocalBroadcastManager.getInstance(this) }
@@ -39,7 +37,7 @@ class MainActivity : AppCompatActivity() {
             var newToken = data.getStringExtra("token")
             if (newToken != null) {
                 apnToken = newToken
-                initAgillicSDK();
+                initAgillicSDK(solutionName);
             } else if (data.getStringExtra("onclick") != null) {
                 Toast.makeText(applicationContext,data.getStringExtra("onclick"),Toast.LENGTH_LONG).show()
                 //showAlertDialog(data)
@@ -94,13 +92,44 @@ class MainActivity : AppCompatActivity() {
             })
 
     }
+    class SolutionInfo(var name: String, var solutionId : String, var key : String, var secret : String = "") {
+    }
 
-    fun initAgillicSDK() {
+    /*
+
+
+     */
+
+    val solutions = arrayOf(
+        SolutionInfo("trunc-stag", "16k01cn", "VIP4hwIKU1GZ", "gUItpLA0U0PGsvYZ"),
+        SolutionInfo("trunc-prod", "15arnn5", "F6xRABtMVG9h", "yOdwUJlBB6g9kZoi"),
+        SolutionInfo("truncint-stag", "qrcqkw", "Z6SOrRon1TCe", "q5i4R1GTVBpqvIYW"),
+        SolutionInfo("tryit1-stag", "o9257h", "?", "?"),
+        SolutionInfo("tryit8-stag", "195b1q", "?", "?")
+    )
+
+    fun findSolution(name : String) : SolutionInfo? {
+        for (solution in solutions) {
+            if (name == solution.name) {
+                return solution;
+            }
+        }
+        return null
+    }
+
+    fun initAgillicSDK(name: String) {
+        if (name != null) {
+            solutionName = name
+        }
+        var solutionInfo = findSolution(solutionName)
+        if (solutionInfo == null) {
+            Toast.makeText(applicationContext,"Failed to get Solution Configuration for SDK",Toast.LENGTH_LONG).show()
+            return;
+        }
         synchronized(this) {
             if (sdk == null) {
                 sdk = AgillicSDK.instance
-                sdk!!.init(key, secret)
-                //sdk!!.setCollector("https://snowplowreader-eu1.agillic.net");
+                sdk!!.init(solutionInfo.key, solutionInfo.secret)
             }
             val displayMetrics = DisplayMetrics()
             windowManager.getDefaultDisplay().getMetrics(displayMetrics);
@@ -108,7 +137,7 @@ class MainActivity : AppCompatActivity() {
             tracker = sdk!!.register(
                 clientAppId,
                 clientAppVersion,
-                solutionId,
+                solutionInfo.solutionId,
                 userId,
                 apnToken,
                 applicationContext,

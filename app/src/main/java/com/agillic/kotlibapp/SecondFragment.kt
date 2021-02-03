@@ -8,7 +8,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.navigation.fragment.findNavController
 import com.agillic.app.sdk.ScreenView
-import com.agillic.app.sdk.events.PageView
 
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.

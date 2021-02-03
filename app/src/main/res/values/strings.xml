@@ -16,7 +16,13 @@
     <string name="onclick_action" translatable="false">OPEN_ACTIVITY_1</string>
     <string-array name="solutions">
         <item>trunc-stag</item>
-        <item>cypress-stag</item>
+        <item>trunc-prod</item>
         <item>truncint-stag</item>
+        <item>truncint-prod</item>
+        <item>regress-stag</item>
+        <item>regress-prod</item>
+        <item>biweekly-stag</item>
+        <item>biweekly-prod</item>
+        <item>tryit2-stag</item>
     </string-array>
 </resources>

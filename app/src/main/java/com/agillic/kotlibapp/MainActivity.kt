@@ -104,8 +104,16 @@ class MainActivity : AppCompatActivity() {
         SolutionInfo("trunc-stag", "16k01cn", "VIP4hwIKU1GZ", "gUItpLA0U0PGsvYZ"),
         SolutionInfo("trunc-prod", "15arnn5", "F6xRABtMVG9h", "yOdwUJlBB6g9kZoi"),
         SolutionInfo("truncint-stag", "qrcqkw", "Z6SOrRon1TCe", "q5i4R1GTVBpqvIYW"),
-        SolutionInfo("tryit1-stag", "o9257h", "?", "?"),
-        SolutionInfo("tryit8-stag", "195b1q", "?", "?")
+        SolutionInfo("truncint-prod", "tcnf02", "7G2oHyCLVpSB", "cd5LUXrno7jtlD0L"),
+        SolutionInfo("biweekly-stag", "195amoq", "ZtggPWJGi6OJ", "V4kHfeoBoHwubcnF"),
+        SolutionInfo("biweekly-prod", "17t5c28", "uzZXs6CvrNdA", "1B8w9WtlOg252Qcb"),
+        SolutionInfo("regres-stag", "1i3evhk", "6ISaha6q70fP", "rSqydb5LJzSWjL1j"),
+        SolutionInfo("regres-prod", "1gr9ks2", "g3RqlAroyIqx", "GsBHOMyRYQ3ZM2Ix"),
+        SolutionInfo("tryit2-stag", "o9257h", "loLhWjQRMMsf", "tggBGrDNUbjWVsfC"),
+        SolutionInfo("tryit2-prod", "1aeg0mh", "8VVzjSaxBb4F", "kLtg6CE3KDNxb7VN")
+//        SolutionInfo("tryit8-stag", "195b1q", "", ""),
+//        SolutionInfo("tryit8-prod", "1og8j2e", "", ""),
+//        SolutionInfo("dgi-prod", "", "Z6SOrRon1TCe", "q5i4R1GTVBpqvIYW")
     )
 
     fun findSolution(name : String) : SolutionInfo? {
@@ -129,8 +137,12 @@ class MainActivity : AppCompatActivity() {
         synchronized(this) {
             if (sdk == null) {
                 sdk = AgillicSDK.instance
+<<<<<<< Updated upstream
                 sdk!!.init(solutionInfo.key, solutionInfo.secret)
+=======
+>>>>>>> Stashed changes
             }
+            sdk!!.init(solutionInfo.key, solutionInfo.secret)
             val displayMetrics = DisplayMetrics()
             windowManager.getDefaultDisplay().getMetrics(displayMetrics);
             //applicationContext.display.getRealMetrics(displayMetrics)

@@ -194,8 +194,9 @@ class AgillicSDK private constructor() {
                         try {
                             try {
                                 val response = client.newCall(request).execute()
-                                if (response.isSuccessful) return "OK"
-                                if (response.code() < 500) {
+                                Log.i("register", "register: " + response.code() + " ")
+                                    if (response.isSuccessful) return "OK"
+                                if (response.code() >= 300) {
                                     val msg = "Client error: " + response.code() + " " + response.body().toString()
                                     Log.e("register", "doInBackground: " + msg)
                                     return msg

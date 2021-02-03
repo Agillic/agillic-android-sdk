@@ -7,11 +7,13 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Spinner
 import androidx.navigation.fragment.findNavController
 import com.agillic.app.sdk.ScreenView
-import com.agillic.app.sdk.events.PageView
+import kotlinx.android.synthetic.main.fragment_first.*
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
@@ -47,10 +49,24 @@ class FirstFragment : Fragment() {
         })
 
         view.findViewById<Button>(R.id.button_login)?.setOnClickListener {
-            mainActivity?.initAgillicSDK();
+            var name = solution_spinner.getSelectedItem() as String
+            mainActivity?.initAgillicSDK(name)
         }
         view.findViewById<Button>(R.id.button_next)?.setOnClickListener {
             findNavController().navigate(R.id.action_FirstFragment_to_SecondFragment)
+        }
+
+        val spinner: Spinner = view.findViewById(R.id.solution_spinner)
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        val also = ArrayAdapter.createFromResource(
+            requireContext(),
+            R.array.solutions,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            // Apply the adapter to the spinner
+            spinner.adapter = adapter
         }
         mainActivity?.tracker?.track(ScreenView().id(UUID).name("app_protocol://fragment/1"))
     }

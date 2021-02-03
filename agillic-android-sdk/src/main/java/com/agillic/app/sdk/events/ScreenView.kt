@@ -17,7 +17,5 @@ class ScreenView(): CommonEvent() {
             .id(uuid)
             .name(name)
             .build()
-
-
     }
 }

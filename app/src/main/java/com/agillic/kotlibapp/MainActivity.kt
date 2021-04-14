@@ -16,7 +16,6 @@ import com.agillic.app.sdk.AgillicSDK
 import com.agillic.app.sdk.AgillicTracker
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.FirebaseApp
 import com.google.firebase.iid.FirebaseInstanceId
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -25,7 +24,7 @@ class MainActivity : AppCompatActivity() {
     // From build properties
     var clientAppId : String = "httpV1" // This Applications unique id.
     var clientAppVersion : String? = "1.0" // This Applications version
-    var userId : String = "dennis.schafroth@agillic.com" // Retrieved from login
+    var recipientId : String = "dennis.schafroth@agillic.com" // Retrieved from login
     var apnToken : String? = null
     var tracker : AgillicTracker? = null;
     var solutionName : String = "trunc-stag"
@@ -67,9 +66,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        //var app = FirebaseApp.initializeApp(applicationContext)
         lbm.registerReceiver(tokenListener, IntentFilter(getString(R.string.onclick_action)))
-
 
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -137,10 +134,7 @@ class MainActivity : AppCompatActivity() {
         synchronized(this) {
             if (sdk == null) {
                 sdk = AgillicSDK.instance
-<<<<<<< Updated upstream
                 sdk!!.init(solutionInfo.key, solutionInfo.secret)
-=======
->>>>>>> Stashed changes
             }
             sdk!!.init(solutionInfo.key, solutionInfo.secret)
             val displayMetrics = DisplayMetrics()
@@ -150,7 +144,7 @@ class MainActivity : AppCompatActivity() {
                 clientAppId,
                 clientAppVersion,
                 solutionInfo.solutionId,
-                userId,
+                recipientId,
                 apnToken,
                 applicationContext,
                 displayMetrics

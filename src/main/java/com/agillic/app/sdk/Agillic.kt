@@ -2,17 +2,16 @@ package com.agillic.app.sdk
 
 import android.app.Activity
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.AsyncTask
 import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
+import com.agillic.app.sdk.events.AgillicAppView
 import com.snowplowanalytics.snowplow.tracker.DevicePlatforms
 import com.snowplowanalytics.snowplow.tracker.Emitter
-import com.snowplowanalytics.snowplow.tracker.Emitter.EmitterBuilder
 import com.snowplowanalytics.snowplow.tracker.Subject
-import com.snowplowanalytics.snowplow.tracker.Subject.SubjectBuilder
 import com.snowplowanalytics.snowplow.tracker.Tracker
-import com.snowplowanalytics.snowplow.tracker.Tracker.TrackerBuilder
 import com.snowplowanalytics.snowplow.tracker.emitter.BufferOption
 import com.snowplowanalytics.snowplow.tracker.emitter.HttpMethod
 import com.snowplowanalytics.snowplow.tracker.emitter.RequestCallback
@@ -20,6 +19,7 @@ import com.snowplowanalytics.snowplow.tracker.emitter.RequestSecurity
 import com.snowplowanalytics.snowplow.tracker.payload.SelfDescribingJson
 import com.snowplowanalytics.snowplow.tracker.utils.Util
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -30,109 +30,123 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 
-class AgillicSDK private constructor() {
+object Agillic {
+    private var agillicTracker: AgillicTrackerImpl? = null
     private var url: String
-    private var requestSecurity = RequestSecurity.HTTPS
+    private val requestSecurity = RequestSecurity.HTTPS
     private var collectorEndpoint = "snowplowtrack-eu1.agillic.net"
     private val service: ExecutorService? = null
     private var auth: BasicAuth? = null
+    private val apiUrlFormat = "https://api%s-eu1.agillic.net"
 
-    companion object {
-        private const val apiUrlFormat = "https://api%s-eu1.agillic.net"
-        val instance: AgillicSDK
-            get() = AgillicSDK()
-    }
+    private var solutionId: String? = null
 
     init {
         url = String.format(apiUrlFormat, "")
     }
 
-    fun setDevApi() {
-        url = String.format(apiUrlFormat, "dev")
+    fun configure(apiKey: String, apiSecret: String, solutionId: String) {
+        Agillic.solutionId = solutionId
+        auth = getAuth(apiKey, apiSecret)
     }
 
-    fun setTestApi() {
-        url = String.format(apiUrlFormat, "test")
-    }
-
-    fun setApi(api: String) {
-        url = api
-    }
-
-    fun setCollector(endpoint: String) {
-        requestSecurity =  RequestSecurity.HTTPS
-        collectorEndpoint = endpoint
-        val protocol = "http://"
-        val httpsString = "https://"
-
-        if (endpoint.startsWith(protocol)) {
-            collectorEndpoint = endpoint.substring(7)
-            requestSecurity = RequestSecurity.HTTP
-        } else if (endpoint.startsWith(httpsString)) {
-            collectorEndpoint = endpoint.substring(httpsString.length)
-            requestSecurity = RequestSecurity.HTTPS
+    fun pauseTracking() {
+        if (agillicTracker == null) {
+            throw java.lang.RuntimeException("Agillic.register() must be called before Agillic.pauseTracking()")
+        } else {
+            agillicTracker?.pauseTracking()
         }
     }
-
-    fun init(key: String, secret: String) {
-        auth = getAuth(key, secret)
-    }
-
-    fun init(auth: BasicAuth?) {
-        this.auth = auth
+    fun resumeTracking() {
+        if (agillicTracker == null) {
+            throw java.lang.RuntimeException("Agillic.register() must be called before Agillic.resumeTracking()")
+        } else {
+            agillicTracker?.resumeTracking()
+        }
     }
 
     private fun shutdown() {
         service?.shutdownNow()
     }
 
+    fun track(event: AgillicAppView) {
+        if (agillicTracker == null) {
+            throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
+            return
+        }
+        agillicTracker?.track(event)
+    }
+
     fun register(
-        clientAppId: String,
-        clientAppVersion: String?,
-        solutionId: String,
-        userId: String,
-        pnToken: String?,
-        context: Context,
-        displayMetrics: DisplayMetrics?
-    ): AgillicTracker {
+        recipientId: String,
+        activity: Activity,
+        pushNotificationToken: String? = null
+    ) {
+        if (auth == null || solutionId == null) {
+            throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
+            return
+        }
         //service = Executors.newSingleThreadExecutor();
         // service.shutdown();
         // the application id to attach to events
         // the namespace to attach to events
         // Register at and return a Tracker
-        val emitter: Emitter = createEmitter(collectorEndpoint, context)
-        val subject: Subject = SubjectBuilder().build()
-        subject.setUserId(userId)
+        val emitter: Emitter = createEmitter(collectorEndpoint, activity)
+        val subject: Subject = Subject.SubjectBuilder().build()
+        subject.setUserId(recipientId)
         val tracker = createSnowPlowTracker(
             emitter,
             subject,
             "agillic",
             solutionId,
-            context
+            activity
         )
-        val deviceInfo = Util.getMobileContext(context)
-        RegisterTask(tracker, clientAppId, clientAppVersion, userId, auth, pnToken, deviceInfo, displayMetrics).execute(url)
-
-        return AgillicTrackerImpl(tracker)
+        val displayMetrics = DisplayMetrics()
+        activity.windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val deviceInfo = Util.getMobileContext(activity)
+        val clientAppVersion: String = try {
+            activity.packageManager
+                .getPackageInfo(activity.packageName, 0).versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+            "NA"
+        }
+        RegisterTask(
+            tracker,
+            activity.packageName,
+            clientAppVersion,
+            recipientId,
+            auth,
+            pushNotificationToken,
+            deviceInfo,
+            displayMetrics
+        ).execute(
+            url
+        )
+        agillicTracker = AgillicTrackerImpl(tracker)
     }
 
     private fun getAuth(key: String, secret: String): BasicAuth {
         return BasicAuth(key, secret)
     }
 
-    inner class BasicAuth(key: String, secret: String) {
-        private var basicAuth: String = "Basic " + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Base64.getEncoder().encodeToString("$key:$secret".toByteArray())
-        } else {
-            android.util.Base64.encodeToString("$key:$secret".toByteArray(), android.util.Base64.NO_WRAP);
-        }
+    class BasicAuth(key: String, secret: String) {
+        private var basicAuth: String =
+            "Basic " + if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Base64.getEncoder().encodeToString("$key:$secret".toByteArray())
+            } else {
+                android.util.Base64.encodeToString(
+                    "$key:$secret".toByteArray(),
+                    android.util.Base64.NO_WRAP
+                );
+            }
 
         fun getAuth(): String {
             return basicAuth
         }
     }
 
-    internal inner class RegisterTask(
+    internal class RegisterTask(
         var tracker: Tracker,
         var clientAppId: String?,
         var clientAppVersion: String?,
@@ -141,11 +155,10 @@ class AgillicSDK private constructor() {
         var appToken: String?,
         var deviceInfo: SelfDescribingJson,
         var displayMetrics: DisplayMetrics?
-    ) : AsyncTask<String, Int, String>()
-    {
+    ) : AsyncTask<String, Int, String>() {
         override fun doInBackground(vararg urls: String): String? {
             // Can remove loop: Session sesion = tracker.session.loadFromFileFuture.get()
-            while (! tracker.session.waitForSessionFileLoad()) {
+            while (!tracker.session.waitForSessionFileLoad()) {
                 Logger.getLogger(this.javaClass.name).warning("Session still not loaded")
             }
             try {
@@ -155,7 +168,7 @@ class AgillicSDK private constructor() {
                     val request = Request.Builder().url(requestUrl)
                         .addHeader("Authorization", auth!!.getAuth()).put(object : RequestBody() {
                             override fun contentType(): MediaType {
-                                return MediaType.get("application/json")
+                                return "application/json".toMediaType()
                             }
 
                             @Throws(IOException::class)
@@ -163,7 +176,7 @@ class AgillicSDK private constructor() {
                                 val deviceInfoData = deviceInfo.map["data"] as Map<String, String>
                                 val deviceModel = deviceInfoData["deviceModel"]
                                 val json = String.format(
-                                            "{\n" +
+                                    "{\n" +
                                             "  \"appInstallationId\" : \"%s\",\n" +
                                             "  \"clientAppId\": %s ,\n" +
                                             "  \"clientAppVersion\": %s,\n" +
@@ -184,27 +197,28 @@ class AgillicSDK private constructor() {
                                     displayMetrics?.widthPixels,
                                     displayMetrics?.heightPixels
                                 )
-                                Log.d("register",requestUrl + ": " + json)
+                                Log.d("register", requestUrl + ": " + json)
                                 bufferedSink.write(json.toByteArray())
                             }
                         }).build()
                     var retries = 3
-                    var sleep = 1000
+                    val sleep = 5000
                     while (retries-- > 0) {
                         try {
                             try {
                                 val response = client.newCall(request).execute()
-                                Log.i("register", "register: " + response.code() + " ")
-                                    if (response.isSuccessful) return "OK"
-                                if (response.code() >= 300) {
-                                    val msg = "Client error: " + response.code() + " " + response.body().toString()
+                                Log.i("register", "register: " + response.code + " ")
+                                if (response.isSuccessful) return "OK"
+                                if (response.code >= 300) {
+                                    val msg =
+                                        "Client error: " + response.code + " " + response.body
+                                            .toString()
                                     Log.e("register", "doInBackground: " + msg)
                                     return msg
                                 }
                             } catch (ignored: IOException) {
                             }
                             Thread.sleep(sleep.toLong())
-                            sleep *= 2
                         } catch (ignored: InterruptedException) {
                             Thread.currentThread().interrupt()
                         }
@@ -226,7 +240,7 @@ class AgillicSDK private constructor() {
         return string
     }
 
-    protected fun createHttpClient(): OkHttpClient { // use OkHttpClient to send events
+    private fun createHttpClient(): OkHttpClient { // use OkHttpClient to send events
         return OkHttpClient.Builder()
             .connectTimeout(5, TimeUnit.SECONDS)
             .readTimeout(5, TimeUnit.SECONDS)
@@ -234,9 +248,9 @@ class AgillicSDK private constructor() {
             .build()
     }
 
-    protected fun createEmitter(url: String?, context: Context?): Emitter {
+    private fun createEmitter(url: String?, context: Context?): Emitter {
         // build an emitter, this is used by the tracker to batch and schedule transmission of events
-        return EmitterBuilder(url, context)
+        return Emitter.EmitterBuilder(url, context)
             .method(HttpMethod.GET)
             .security(requestSecurity)
             .callback(object : RequestCallback {
@@ -250,21 +264,24 @@ class AgillicSDK private constructor() {
                     successCount: Int,
                     failedCount: Int
                 ) {
-                    Log.e("AgillicSDK:emitter","Successfully sent " + successCount + " events; failed to send " + failedCount + " events")
+                    Log.e(
+                        "AgillicSDK:emitter",
+                        "Successfully sent " + successCount + " events; failed to send " + failedCount + " events"
+                    )
                 }
             })
             .option(BufferOption.Single)
             .build()
     }
 
-    protected fun createSnowPlowTracker(
+    private fun createSnowPlowTracker(
         emitter: Emitter?,
         subject: Subject?,
         namespace: String?,
         appId: String?,
         context: Context?
     ): Tracker { // now we have the emitter, we need a tracker to turn our events into something a Snowplow collector can understand
-        return TrackerBuilder(emitter, namespace, appId, context)
+        return Tracker.TrackerBuilder(emitter, namespace, appId, context)
             .subject(subject)
             .base64(true) //
             .sessionContext(true)

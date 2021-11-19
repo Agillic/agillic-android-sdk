@@ -68,5 +68,3 @@ dependencies {
     //implementation fileTree(dir: 'libs', include: ['*.aar'])
 }
 
-apply plugin: 'com.google.gms.google-services'
-

@@ -24,6 +24,8 @@ See the subsections below for details about different installation methods.
 
 ### Add using Gradle (recommended)
 
+[![](https://jitpack.io/v/agillic/agillic-android-sdk.svg)](https://jitpack.io/#agillic/agillic-android-sdk)
+
 Learn how to [Add SDK as a dependency using Gradle](https://developer.android.com/studio/build/dependencies)
 
 ###### Add the maven jitpack repository to your root settings.gradle file
@@ -44,7 +46,7 @@ dependencyResolutionManagement {
 ###### Add this to your build.gradle
 ```bash
 dependencies {
-    implementation 'com.github.agillic:agillic-android-sdk:0.2.5'
+    implementation 'com.github.agillic:agillic-android-sdk:0.2.6'
 }
 ```
 

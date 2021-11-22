@@ -3,6 +3,7 @@ package com.agillic.app.sdk
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Insets
 import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
@@ -31,6 +32,12 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
+import android.view.WindowInsets
+
+import android.view.WindowMetrics
+
+
+
 
 object Agillic {
     private var agillicTracker: AgillicTrackerImpl? = null
@@ -39,7 +46,7 @@ object Agillic {
     private var collectorEndpoint = "snowplowtrack-eu1.agillic.net"
     private val service: ExecutorService? = null
     private var auth: BasicAuth? = null
-    private val apiUrlFormat = "https://api%s-eu1.agillic.net"
+    private const val apiUrlFormat = "https://api%s-eu1.agillic.net"
 
     private var solutionId: String? = null
 
@@ -114,8 +121,24 @@ object Agillic {
             solutionId,
             activity
         )
-        val displayMetrics = DisplayMetrics()
-        activity.windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val deviceWidth: Int
+        val deviceHeight: Int
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val windowMetrics = activity.windowManager.currentWindowMetrics
+            val insets: Insets = windowMetrics.windowInsets
+                .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
+            deviceWidth = windowMetrics.bounds.width() - insets.left - insets.right
+            deviceHeight = windowMetrics.bounds.height() - insets.top - insets.bottom
+        } else {
+            val outMetrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            val display = activity.windowManager.defaultDisplay
+            @Suppress("DEPRECATION")
+            display.getMetrics(outMetrics)
+            deviceWidth = outMetrics.widthPixels
+            deviceHeight = outMetrics.heightPixels
+        }
+
         val deviceInfo = Util.getMobileContext(activity)
         val clientAppVersion: String = try {
             activity.packageManager
@@ -134,7 +157,8 @@ object Agillic {
                 auth,
                 pushNotificationToken,
                 deviceInfo,
-                displayMetrics,
+                deviceWidth,
+                deviceHeight,
                 url
             )
         }
@@ -149,7 +173,8 @@ object Agillic {
         auth: BasicAuth?,
         appToken: String?,
         deviceInfo: SelfDescribingJson,
-        displayMetrics: DisplayMetrics?,
+        deviceWidth: Int?,
+        deviceHeight: Int?,
         vararg urls: String
     ): String {
         while (!tracker.session.waitForSessionFileLoad()) {
@@ -188,8 +213,8 @@ object Agillic {
                                 emptyIfNull(Util.getOsVersion()),
                                 emptyIfNull(deviceModel),
                                 emptyIfNull(appToken),
-                                displayMetrics?.widthPixels,
-                                displayMetrics?.heightPixels
+                                deviceWidth,
+                                deviceHeight
                             )
                             Log.d("register", requestUrl + ": " + json)
                             bufferedSink.write(json.toByteArray())

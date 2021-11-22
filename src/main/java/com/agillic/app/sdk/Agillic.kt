@@ -34,10 +34,6 @@ import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 import android.view.WindowInsets
 
-import android.view.WindowMetrics
-
-
-
 
 object Agillic {
     private var agillicTracker: AgillicTrackerImpl? = null
@@ -191,7 +187,7 @@ object Agillic {
                         }
 
                         @Throws(IOException::class)
-                        override fun writeTo(bufferedSink: BufferedSink) {
+                        override fun writeTo(sink: BufferedSink) {
                             val deviceInfoData = deviceInfo.map["data"] as Map<String, String>
                             val deviceModel = deviceInfoData["deviceModel"]
                             val json = String.format(
@@ -216,8 +212,8 @@ object Agillic {
                                 deviceWidth,
                                 deviceHeight
                             )
-                            Log.d("register", requestUrl + ": " + json)
-                            bufferedSink.write(json.toByteArray())
+                            Log.d("register", "$requestUrl : $json")
+                            sink.write(json.toByteArray())
                         }
                     }).build()
                 var retries = 3
@@ -232,7 +228,7 @@ object Agillic {
                                 val msg =
                                     "Client error: " + response.code + " " + response.body
                                         .toString()
-                                Log.e("register", "doInBackground: " + msg)
+                                Log.e("register", "doInBackground: $msg")
                                 return msg
                             }
                         } catch (ignored: IOException) {
@@ -304,7 +300,7 @@ object Agillic {
                 ) {
                     Log.e(
                         "AgillicSDK:emitter",
-                        "Successfully sent " + successCount + " events; failed to send " + failedCount + " events"
+                        "Successfully sent $successCount events; failed to send $failedCount events"
                     )
                 }
             })

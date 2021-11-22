@@ -57,6 +57,7 @@ object Agillic {
             agillicTracker?.pauseTracking()
         }
     }
+
     fun resumeTracking() {
         if (agillicTracker == null) {
             throw java.lang.RuntimeException("Agillic.register() must be called before Agillic.resumeTracking()")
@@ -71,10 +72,24 @@ object Agillic {
 
     fun track(event: AgillicAppView) {
         if (agillicTracker == null) {
-            throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
-            return
+             throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
         }
         agillicTracker?.track(event)
+    }
+
+    /** Handles push notification opened - user action for alert notifications, delivery into app. This method will parse the data and track it **/
+    fun handlePushNotificationOpened(userInfo: Any) {
+        val agillicPushId = getAgillicPushId(userInfo)
+        if (agillicPushId == null) {
+            Logger.getLogger(this.javaClass.name).warning("Skipping non-Agillic notification")
+        } else {
+            val pushEvent = AgillicAppView(screenName = "pushOpened://agillic_push_id=$agillicPushId")
+            track(pushEvent)
+        }
+    }
+
+    private fun getAgillicPushId(userInfo: Any) : String? {
+        return "" //todo
     }
 
     fun register(

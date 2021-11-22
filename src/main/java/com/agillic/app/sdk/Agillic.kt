@@ -3,7 +3,6 @@ package com.agillic.app.sdk
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
-import android.os.AsyncTask
 import android.os.Build
 import android.util.DisplayMetrics
 import android.util.Log
@@ -18,6 +17,9 @@ import com.snowplowanalytics.snowplow.tracker.emitter.RequestCallback
 import com.snowplowanalytics.snowplow.tracker.emitter.RequestSecurity
 import com.snowplowanalytics.snowplow.tracker.payload.SelfDescribingJson
 import com.snowplowanalytics.snowplow.tracker.utils.Util
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -72,7 +74,7 @@ object Agillic {
 
     fun track(event: AgillicAppView) {
         if (agillicTracker == null) {
-             throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
+            throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
         }
         agillicTracker?.track(event)
     }
@@ -83,12 +85,13 @@ object Agillic {
         if (agillicPushId == null) {
             Logger.getLogger(this.javaClass.name).warning("Skipping non-Agillic notification")
         } else {
-            val pushEvent = AgillicAppView(screenName = "pushOpened://agillic_push_id=$agillicPushId")
+            val pushEvent =
+                AgillicAppView(screenName = "pushOpened://agillic_push_id=$agillicPushId")
             track(pushEvent)
         }
     }
 
-    private fun getAgillicPushId(userInfo: Any) : String? {
+    private fun getAgillicPushId(userInfo: Any): String? {
         return "" //todo
     }
 
@@ -97,15 +100,10 @@ object Agillic {
         activity: Activity,
         pushNotificationToken: String? = null
     ) {
+        // Register app with SDK and return a Tracker
         if (auth == null || solutionId == null) {
             throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
-            return
         }
-        //service = Executors.newSingleThreadExecutor();
-        // service.shutdown();
-        // the application id to attach to events
-        // the namespace to attach to events
-        // Register at and return a Tracker
         val emitter: Emitter = createEmitter(collectorEndpoint, activity)
         val subject: Subject = Subject.SubjectBuilder().build()
         subject.setUserId(recipientId)
@@ -126,19 +124,106 @@ object Agillic {
             e.printStackTrace()
             "NA"
         }
-        RegisterTask(
-            tracker,
-            activity.packageName,
-            clientAppVersion,
-            recipientId,
-            auth,
-            pushNotificationToken,
-            deviceInfo,
-            displayMetrics
-        ).execute(
-            url
-        )
+
+        CoroutineScope(Dispatchers.Main).launch {
+            register(
+                tracker,
+                activity.packageName,
+                clientAppVersion,
+                recipientId,
+                auth,
+                pushNotificationToken,
+                deviceInfo,
+                displayMetrics,
+                url
+            )
+        }
         agillicTracker = AgillicTrackerImpl(tracker)
+    }
+
+    private fun register(
+        tracker: Tracker,
+        clientAppId: String?,
+        clientAppVersion: String?,
+        userId: String,
+        auth: BasicAuth?,
+        appToken: String?,
+        deviceInfo: SelfDescribingJson,
+        displayMetrics: DisplayMetrics?,
+        vararg urls: String
+    ): String {
+        while (!tracker.session.waitForSessionFileLoad()) {
+            Logger.getLogger(this.javaClass.name).warning("Session still not loaded")
+        }
+        try {
+            urls.forEachIndexed { _, url ->
+                val requestUrl = "$url/register/$userId"
+                val client = createHttpClient()
+                val request = Request.Builder().url(requestUrl)
+                    .addHeader("Authorization", auth!!.getAuth()).put(object : RequestBody() {
+                        override fun contentType(): MediaType {
+                            return "application/json".toMediaType()
+                        }
+
+                        @Throws(IOException::class)
+                        override fun writeTo(bufferedSink: BufferedSink) {
+                            val deviceInfoData = deviceInfo.map["data"] as Map<String, String>
+                            val deviceModel = deviceInfoData["deviceModel"]
+                            val json = String.format(
+                                "{\n" +
+                                        "  \"appInstallationId\" : \"%s\",\n" +
+                                        "  \"clientAppId\": %s ,\n" +
+                                        "  \"clientAppVersion\": %s,\n" +
+                                        "  \"osName\": \"%s\" ,\n" +
+                                        "  \"osVersion\": %s ,\n" +
+                                        "  \"deviceModel\": %s,\n" +
+                                        "  \"pushNotificationToken\": %s,\n" +
+                                        "  \"modelDimX\": %d,\n" +
+                                        "  \"modelDimY\": %d\n" +
+                                        "}\n",
+                                tracker.session.userId,
+                                emptyIfNull(clientAppId),
+                                emptyIfNull(clientAppVersion),
+                                Util.getOsType(),
+                                emptyIfNull(Util.getOsVersion()),
+                                emptyIfNull(deviceModel),
+                                emptyIfNull(appToken),
+                                displayMetrics?.widthPixels,
+                                displayMetrics?.heightPixels
+                            )
+                            Log.d("register", requestUrl + ": " + json)
+                            bufferedSink.write(json.toByteArray())
+                        }
+                    }).build()
+                var retries = 3
+                val sleep = 5000
+                while (retries-- > 0) {
+                    try {
+                        try {
+                            val response = client.newCall(request).execute()
+                            Log.i("register", "register: " + response.code + " ")
+                            if (response.isSuccessful) return "OK"
+                            if (response.code >= 300) {
+                                val msg =
+                                    "Client error: " + response.code + " " + response.body
+                                        .toString()
+                                Log.e("register", "doInBackground: " + msg)
+                                return msg
+                            }
+                        } catch (ignored: IOException) {
+                        }
+                        Thread.sleep(sleep.toLong())
+                    } catch (ignored: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                    }
+                }
+            }
+        } catch (ex: Exception) {
+            Log.e("register", "Failed to run registration: " + ex.message)
+            throw ex
+        }
+        Log.d("register", "Stopping registration.")
+        return "Stopping"
     }
 
     private fun getAuth(key: String, secret: String): BasicAuth {
@@ -158,93 +243,6 @@ object Agillic {
 
         fun getAuth(): String {
             return basicAuth
-        }
-    }
-
-    internal class RegisterTask(
-        var tracker: Tracker,
-        var clientAppId: String?,
-        var clientAppVersion: String?,
-        var userId: String,
-        var auth: BasicAuth?,
-        var appToken: String?,
-        var deviceInfo: SelfDescribingJson,
-        var displayMetrics: DisplayMetrics?
-    ) : AsyncTask<String, Int, String>() {
-        override fun doInBackground(vararg urls: String): String? {
-            // Can remove loop: Session sesion = tracker.session.loadFromFileFuture.get()
-            while (!tracker.session.waitForSessionFileLoad()) {
-                Logger.getLogger(this.javaClass.name).warning("Session still not loaded")
-            }
-            try {
-                urls.forEachIndexed { _, url ->
-                    val requestUrl = "$url/register/$userId"
-                    val client = createHttpClient()
-                    val request = Request.Builder().url(requestUrl)
-                        .addHeader("Authorization", auth!!.getAuth()).put(object : RequestBody() {
-                            override fun contentType(): MediaType {
-                                return "application/json".toMediaType()
-                            }
-
-                            @Throws(IOException::class)
-                            override fun writeTo(bufferedSink: BufferedSink) {
-                                val deviceInfoData = deviceInfo.map["data"] as Map<String, String>
-                                val deviceModel = deviceInfoData["deviceModel"]
-                                val json = String.format(
-                                    "{\n" +
-                                            "  \"appInstallationId\" : \"%s\",\n" +
-                                            "  \"clientAppId\": %s ,\n" +
-                                            "  \"clientAppVersion\": %s,\n" +
-                                            "  \"osName\": \"%s\" ,\n" +
-                                            "  \"osVersion\": %s ,\n" +
-                                            "  \"deviceModel\": %s,\n" +
-                                            "  \"pushNotificationToken\": %s,\n" +
-                                            "  \"modelDimX\": %d,\n" +
-                                            "  \"modelDimY\": %d\n" +
-                                            "}\n",
-                                    tracker.session.userId,
-                                    emptyIfNull(clientAppId),
-                                    emptyIfNull(clientAppVersion),
-                                    Util.getOsType(),
-                                    emptyIfNull(Util.getOsVersion()),
-                                    emptyIfNull(deviceModel),
-                                    emptyIfNull(appToken),
-                                    displayMetrics?.widthPixels,
-                                    displayMetrics?.heightPixels
-                                )
-                                Log.d("register", requestUrl + ": " + json)
-                                bufferedSink.write(json.toByteArray())
-                            }
-                        }).build()
-                    var retries = 3
-                    val sleep = 5000
-                    while (retries-- > 0) {
-                        try {
-                            try {
-                                val response = client.newCall(request).execute()
-                                Log.i("register", "register: " + response.code + " ")
-                                if (response.isSuccessful) return "OK"
-                                if (response.code >= 300) {
-                                    val msg =
-                                        "Client error: " + response.code + " " + response.body
-                                            .toString()
-                                    Log.e("register", "doInBackground: " + msg)
-                                    return msg
-                                }
-                            } catch (ignored: IOException) {
-                            }
-                            Thread.sleep(sleep.toLong())
-                        } catch (ignored: InterruptedException) {
-                            Thread.currentThread().interrupt()
-                        }
-                    }
-                }
-            } catch (ex: Exception) {
-                Log.e("register", "Failed to run registration: " + ex.message)
-                throw ex
-            }
-            Log.d("register", "Stopping registration.")
-            return "Stopping"
         }
     }
 

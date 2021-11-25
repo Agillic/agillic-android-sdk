@@ -283,7 +283,8 @@ object Agillic {
     }
 
     private fun createEmitter(url: String?, context: Context?): Emitter {
-        // build an emitter, this is used by the tracker to batch and schedule transmission of events
+        /** Responsible for all the storage, networking and scheduling required to ensure events are sent to a collector.
+        Details like the collector endpoint and sending timeout lengths are set here. **/
         return Emitter.EmitterBuilder(url, context)
             .method(HttpMethod.GET)
             .security(requestSecurity)
@@ -324,7 +325,6 @@ object Agillic {
             //.sessionCallbacks()
             .mobileContext(true)
             .geoLocationContext(true)
-            .platform(DevicePlatforms.Mobile)
             .build()
     }
 }

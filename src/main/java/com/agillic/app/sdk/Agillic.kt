@@ -320,9 +320,7 @@ object Agillic {
             .subject(subject)
             .base64(true) //
             .sessionContext(true)
-            .sessionCheckInterval(15)
             .platform(DevicePlatforms.Mobile)
-            //.sessionCallbacks()
             .mobileContext(true)
             .geoLocationContext(true)
             .build()

@@ -249,10 +249,8 @@ object Agillic {
                 }
             } catch (ex: Exception) {
                 Log.e("register", "Failed to run registration: " + ex.message)
-                continuation.resumeWith(Result.failure(ex))
             }
             Log.d("register", "Stopping registration.")
-            continuation.resumeWith(Result.failure(Exception("Stopping registration")))
         }
     }
 

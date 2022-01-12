@@ -1,6 +1,6 @@
 package com.agillic.app.sdk
 
-interface RegisterCallback {
+interface Callback {
     fun success(response:String)
     fun failed(response:String)
 }

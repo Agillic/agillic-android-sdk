@@ -1,12 +1,10 @@
 package com.agillic.app.sdk
 
 import android.app.Activity
-import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Insets
 import android.os.Build
-import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowInsets
@@ -109,13 +107,14 @@ object Agillic {
         recipientId: String,
         activity: Activity,
         pushNotificationToken: String? = null,
-        callback:RegisterCallback? = null
+        registerCallback:Callback? = null,
+        trackingCallback:Callback? = null
     ) {
         // Register app with SDK and return a Tracker
         if (auth == null || solutionId == null) {
             throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
         }
-        val emitter: Emitter = createEmitter(collectorEndpoint, activity)
+        val emitter: Emitter = createEmitter(collectorEndpoint, activity, trackingCallback)
         val subject: Subject = Subject.SubjectBuilder().build()
         subject.setUserId(recipientId)
         val tracker = createSnowPlowTracker(
@@ -164,7 +163,7 @@ object Agillic {
                 deviceWidth,
                 deviceHeight,
                 url,
-                callback = callback
+                callback = registerCallback
             )
         }
         agillicTracker = AgillicTrackerImpl(tracker)
@@ -181,7 +180,7 @@ object Agillic {
         deviceWidth: Int?,
         deviceHeight: Int?,
         vararg urls: String,
-        callback:RegisterCallback?
+        callback:Callback?
     ) {
         suspendCoroutine<String> { continuation ->
             while (!tracker.session.waitForSessionFileLoad()) {
@@ -297,7 +296,7 @@ object Agillic {
             .build()
     }
 
-    private fun createEmitter(url: String?, context: Context?): Emitter {
+    private fun createEmitter(url: String?, context: Context?, trackingCallback: Callback?): Emitter {
         /** Responsible for all the storage, networking and scheduling required to ensure events are sent to a collector.
         Details like the collector endpoint and sending timeout lengths are set here. **/
         return Emitter.EmitterBuilder(url, context)
@@ -307,6 +306,7 @@ object Agillic {
                 // let us know on successes (may be called multiple times)
                 override fun onSuccess(successCount: Int) {
                     Log.d("AgillicSDK:emitter", "Successfully sent $successCount events")
+                    trackingCallback?.success("Successfully sent $successCount events")
                 }
 
                 // let us know if something has gone wrong (may be called multiple times)
@@ -318,6 +318,7 @@ object Agillic {
                         "AgillicSDK:emitter",
                         "Successfully sent $successCount events; failed to send $failedCount events"
                     )
+                    trackingCallback?.failed("Successfully sent $successCount events; failed to send $failedCount events")
                 }
             })
             .option(BufferOption.Single)

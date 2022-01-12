@@ -108,7 +108,8 @@ object Agillic {
     fun register(
         recipientId: String,
         activity: Activity,
-        pushNotificationToken: String? = null
+        pushNotificationToken: String? = null,
+        callback:RegisterCallback? = null
     ) {
         // Register app with SDK and return a Tracker
         if (auth == null || solutionId == null) {
@@ -162,7 +163,8 @@ object Agillic {
                 deviceInfo,
                 deviceWidth,
                 deviceHeight,
-                url
+                url,
+                callback = callback
             )
         }
         agillicTracker = AgillicTrackerImpl(tracker)
@@ -178,7 +180,8 @@ object Agillic {
         deviceInfo: SelfDescribingJson,
         deviceWidth: Int?,
         deviceHeight: Int?,
-        vararg urls: String
+        vararg urls: String,
+        callback:RegisterCallback?
     ) {
         suspendCoroutine<String> { continuation ->
             while (!tracker.session.waitForSessionFileLoad()) {
@@ -231,7 +234,12 @@ object Agillic {
                             try {
                                 val response = client.newCall(request).execute()
                                 Log.i("register", "register: " + response.code + " ")
-                                if (response.isSuccessful) continuation.resumeWith(Result.success("Registration successful"))
+                                if (response.isSuccessful) {
+                                    continuation.resumeWith(Result.success("Registration successful"))
+                                    callback?.success("${response.code} - ${response.message} - ${response.body}")
+                                } else {
+                                    callback?.failed("${response.code} - ${response.message} - ${response.body}")
+                                }
                                 if (response.code >= 300) {
                                     val msg =
                                         "Client error: " + response.code + " " + response.body

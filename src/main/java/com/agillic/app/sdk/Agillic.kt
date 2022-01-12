@@ -235,9 +235,9 @@ object Agillic {
                                 Log.i("register", "register: " + response.code + " ")
                                 if (response.isSuccessful) {
                                     continuation.resumeWith(Result.success("Registration successful"))
-                                    callback?.success("${response.code} - ${response.message} - ${response.body}")
+                                    callback?.success("Registration successful: ${response.code} - ${response.body.toString()}")
                                 } else {
-                                    callback?.failed("${response.code} - ${response.message} - ${response.body}")
+                                    callback?.failed("Registration failed: ${response.code} - ${response.body.toString()}")
                                 }
                                 if (response.code >= 300) {
                                     val msg =

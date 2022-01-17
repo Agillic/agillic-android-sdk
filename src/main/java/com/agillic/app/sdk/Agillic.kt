@@ -48,6 +48,8 @@ object Agillic {
     private val job = Job()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val uiScope = CoroutineScope(Dispatchers.Main + job)
+    private lateinit var registerCallback:Callback? = null,
+    private lateinit var trackingCallback:Callback? = null
 
     private var solutionId: String? = null
 
@@ -62,7 +64,8 @@ object Agillic {
 
     fun pauseTracking() {
         if (agillicTracker == null) {
-            throw java.lang.RuntimeException("Agillic.register() must be called before Agillic.pauseTracking()")
+            trackingCallback?.failed("Agillic.register() must be called before Agillic.pauseTracking()")
+            return
         } else {
             agillicTracker?.pauseTracking()
         }
@@ -70,7 +73,8 @@ object Agillic {
 
     fun resumeTracking() {
         if (agillicTracker == null) {
-            throw java.lang.RuntimeException("Agillic.register() must be called before Agillic.resumeTracking()")
+            trackingCallback?.failed("Agillic.register() must be called before Agillic.resumeTracking()")
+            return
         } else {
             agillicTracker?.resumeTracking()
         }
@@ -82,7 +86,8 @@ object Agillic {
 
     fun track(event: AgillicAppView) {
         if (agillicTracker == null) {
-            throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
+            registerCallback?.failed("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
+            return
         }
         agillicTracker?.track(event)
     }
@@ -110,9 +115,12 @@ object Agillic {
         registerCallback:Callback? = null,
         trackingCallback:Callback? = null
     ) {
+        this.registerCallback = registerCallback
+        this.trackingCallback = trackingCallback
         // Register app with SDK and return a Tracker
         if (auth == null || solutionId == null) {
-            throw java.lang.RuntimeException("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
+            registerCallback.failed("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
+            return
         }
         val emitter: Emitter = createEmitter(collectorEndpoint, activity, trackingCallback)
         val subject: Subject = Subject.SubjectBuilder().build()
@@ -233,13 +241,13 @@ object Agillic {
                             try {
                                 val response = client.newCall(request).execute()
                                 Log.i("register", "register: " + response.code + " ")
-                                if (response.isSuccessful) {
+                                if (response?.isSuccessful) {
                                     continuation.resumeWith(Result.success("Registration successful"))
-                                    callback?.success("${response.code}: ${response.body.string()}")
+                                    callback?.success("${response.code}: ${response?.body?.string()}")
                                 } else {
-                                    callback?.failed("${response.code}: ${response.body.string()}")
+                                    callback?.failed("${response.code}: ${response?.body?.string()}")
                                 }
-                                if (response.code >= 300) {
+                                if (response?.code >= 300) {
                                     val msg =
                                         "Client error: " + response.code + " " + response.body
                                             .toString()

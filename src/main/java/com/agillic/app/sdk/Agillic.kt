@@ -48,8 +48,8 @@ object Agillic {
     private val job = Job()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val uiScope = CoroutineScope(Dispatchers.Main + job)
-    private lateinit var registerCallback:Callback? = null,
-    private lateinit var trackingCallback:Callback? = null
+    private var registerCallback:Callback? = null
+    private var trackingCallback:Callback? = null
 
     private var solutionId: String? = null
 
@@ -119,7 +119,7 @@ object Agillic {
         this.trackingCallback = trackingCallback
         // Register app with SDK and return a Tracker
         if (auth == null || solutionId == null) {
-            registerCallback.failed("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
+            registerCallback?.failed("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
             return
         }
         val emitter: Emitter = createEmitter(collectorEndpoint, activity, trackingCallback)

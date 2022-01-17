@@ -235,9 +235,9 @@ object Agillic {
                                 Log.i("register", "register: " + response.code + " ")
                                 if (response.isSuccessful) {
                                     continuation.resumeWith(Result.success("Registration successful"))
-                                    callback?.success("${response.code}: ${response.body.string()}")
+                                    callback?.success("${response.code}: ${response.body().string()}")
                                 } else {
-                                    callback?.failed("${response.code}: ${response.body.string()}")
+                                    callback?.failed("${response.code}: ${response.body().string()}")
                                 }
                                 if (response.code >= 300) {
                                     val msg =
@@ -256,6 +256,7 @@ object Agillic {
                 }
             } catch (ex: Exception) {
                 Log.e("register", "Failed to run registration: " + ex.message)
+                callback?.failed("Failed to run registration: " + ex.message)
             }
             Log.d("register", "Stopping registration.")
         }

@@ -233,6 +233,7 @@ object Agillic {
                                     deviceHeight
                                 )
                                 Log.d("register", "$requestUrl : $json")
+                                callback?.info("$requestUrl : $json")
                                 sink.write(json.toByteArray())
                             }
                         }).build()
@@ -243,11 +244,11 @@ object Agillic {
                             try {
                                 val response = client.newCall(request).execute()
                                 Log.i("register", "register: " + response.code + " ")
-                                if (response?.isSuccessful) {
+                                if (response.isSuccessful) {
                                     continuation.resumeWith(Result.success("Registration successful"))
-                                    callback?.success("${response.code}: ${response?.body?.string()}")
+                                    callback?.success("${response.code}}")
                                 } else {
-                                    callback?.failed("${response.code}: ${response?.body?.string()}")
+                                    callback?.failed("${response.code}}")
                                 }
                             } catch (ignored: IOException) {
                             }

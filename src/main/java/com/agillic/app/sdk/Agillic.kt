@@ -198,7 +198,6 @@ object Agillic {
             }
             try {
                 urls.forEachIndexed { _, url ->
-                    Log.d("MSJAGILLIC", "temp: $url")
                     val requestUrl = "$url/register/$userId"
                     val client = createHttpClient()
                     val request = Request.Builder().url(requestUrl)
@@ -246,12 +245,12 @@ object Agillic {
                                 val response = client.newCall(request).execute()
                                 Log.i("register", "register: " + response.code + " ")
                                 if (response.isSuccessful) {
-                                    continuation.resumeWith(Result.success("Registration successful"))
                                     callback?.success("${response.code}")
                                 } else {
                                     callback?.failed("${response.code}")
                                 }
                             } catch (ignored: IOException) {
+                                Log.e("TEMP", "register exception: $ignored")
                             }
                             Thread.sleep(sleep.toLong())
                         } catch (ignored: InterruptedException) {

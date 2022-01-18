@@ -247,13 +247,13 @@ object Agillic {
                                 } else {
                                     callback?.failed("${response.code}: ${response?.body?.string()}")
                                 }
-                                if (response?.code >= 300) {
+                               /* if (response.code >= 300) {
                                     val msg =
                                         "Client error: " + response.code + " " + response.body
                                             .toString()
                                     Log.e("register", "doInBackground: $msg")
                                     continuation.resumeWith(Result.failure(Exception(msg)))
-                                }
+                                }*/
                             } catch (ignored: IOException) {
                             }
                             Thread.sleep(sleep.toLong())

@@ -48,8 +48,8 @@ object Agillic {
     private val job = Job()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val uiScope = CoroutineScope(Dispatchers.Main + job)
-    private var registerCallback:Callback? = null
-    private var trackingCallback:Callback? = null
+    private var registerCallback: Callback? = null
+    private var trackingCallback: Callback? = null
 
     private var solutionId: String? = null
 
@@ -84,9 +84,13 @@ object Agillic {
         service?.shutdownNow()
     }
 
-    fun track(event: AgillicAppView) {
+    fun track(
+        event: AgillicAppView,
+        trackingCallback: Callback? = null
+    ) {
+        this.trackingCallback = Agillic.trackingCallback
         if (agillicTracker == null) {
-            registerCallback?.failed("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
+            trackingCallback?.failed("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
             return
         }
         agillicTracker?.track(event)
@@ -112,11 +116,9 @@ object Agillic {
         recipientId: String,
         activity: Activity,
         pushNotificationToken: String? = null,
-        registerCallback:Callback? = null,
-        trackingCallback:Callback? = null
+        registerCallback: Callback? = null
     ) {
         this.registerCallback = registerCallback
-        this.trackingCallback = trackingCallback
         // Register app with SDK and return a Tracker
         if (auth == null || solutionId == null) {
             registerCallback?.failed("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
@@ -188,7 +190,7 @@ object Agillic {
         deviceWidth: Int?,
         deviceHeight: Int?,
         vararg urls: String,
-        callback:Callback?
+        callback: Callback?
     ) {
         suspendCoroutine<String> { continuation ->
             while (!tracker.session.waitForSessionFileLoad()) {
@@ -247,13 +249,13 @@ object Agillic {
                                 } else {
                                     callback?.failed("${response.code}: ${response?.body?.string()}")
                                 }
-                               /* if (response.code >= 300) {
-                                    val msg =
-                                        "Client error: " + response.code + " " + response.body
-                                            .toString()
-                                    Log.e("register", "doInBackground: $msg")
-                                    continuation.resumeWith(Result.failure(Exception(msg)))
-                                }*/
+                                /* if (response.code >= 300) {
+                                     val msg =
+                                         "Client error: " + response.code + " " + response.body
+                                             .toString()
+                                     Log.e("register", "doInBackground: $msg")
+                                     continuation.resumeWith(Result.failure(Exception(msg)))
+                                 }*/
                             } catch (ignored: IOException) {
                             }
                             Thread.sleep(sleep.toLong())
@@ -305,7 +307,11 @@ object Agillic {
             .build()
     }
 
-    private fun createEmitter(url: String?, context: Context?, trackingCallback: Callback?): Emitter {
+    private fun createEmitter(
+        url: String?,
+        context: Context?,
+        trackingCallback: Callback?
+    ): Emitter {
         /** Responsible for all the storage, networking and scheduling required to ensure events are sent to a collector.
         Details like the collector endpoint and sending timeout lengths are set here. **/
         return Emitter.EmitterBuilder(url, context)

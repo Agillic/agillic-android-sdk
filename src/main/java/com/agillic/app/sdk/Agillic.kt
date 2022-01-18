@@ -246,6 +246,7 @@ object Agillic {
                                 Log.i("register", "register: " + response.code + " ")
                                 if (response.isSuccessful) {
                                     callback?.success("${response.code}")
+                                    retries = 0
                                 } else {
                                     callback?.failed("${response.code}")
                                 }

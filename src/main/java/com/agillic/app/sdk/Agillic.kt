@@ -198,6 +198,7 @@ object Agillic {
             }
             try {
                 urls.forEachIndexed { _, url ->
+                    Log.d("MSJAGILLIC", "temp: $url")
                     val requestUrl = "$url/register/$userId"
                     val client = createHttpClient()
                     val request = Request.Builder().url(requestUrl)

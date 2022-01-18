@@ -88,7 +88,7 @@ object Agillic {
         event: AgillicAppView,
         trackingCallback: Callback? = null
     ) {
-        this.trackingCallback = Agillic.trackingCallback
+        this.trackingCallback = trackingCallback
         if (agillicTracker == null) {
             trackingCallback?.failed("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
             return

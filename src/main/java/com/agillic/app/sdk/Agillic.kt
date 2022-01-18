@@ -246,9 +246,9 @@ object Agillic {
                                 Log.i("register", "register: " + response.code + " ")
                                 if (response.isSuccessful) {
                                     continuation.resumeWith(Result.success("Registration successful"))
-                                    callback?.success("${response.code}}")
+                                    callback?.success("${response.code}")
                                 } else {
-                                    callback?.failed("${response.code}}")
+                                    callback?.failed("${response.code}")
                                 }
                             } catch (ignored: IOException) {
                             }

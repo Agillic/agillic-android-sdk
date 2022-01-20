@@ -150,50 +150,60 @@ FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener {
 })
 ```
 
-### Track Push Opened 
+## Reading Push Notifications sent from Agillic
 
 _NOTE: Work in progress_
 
-## Reading Push Notification sent from your Agillic
+Agillic push notifications always contains a data payload. Thus the notification will always be delivered to your onMessageReceived callback in your FirebaseMessagingService implementation.
 
-_NOTE: Work in progress_
-
-##### Receiving a push notification while the application is in the foreground
-* Learn how to [Receive a push notification while the application is in the foreground](https://firebase.google.com/docs/cloud-messaging/android/receive#override-onmessagereceived)
-
-There are different types of messages in FCM (Firebase Cloud Messaging):
-
-**Display Messages** does not contain a data payload and triggers a Firebase onMessageReceived() callback only when your app is in the foreground
-
-**Data Messages** contains a data payload and triggers a Firebase onMessageReceived() callback even if your app is in foreground/background/killed
-
-```kotlin
 override fun onMessageReceived(remoteMessage: RemoteMessage) {
     super.onMessageReceived(remoteMessage)
     val data = remoteMessage.data
-    val headline = data["headline"]
-    val message = data["message"]
-    val deeplink = data["deeplink"]
+    val agillicPushId = data["agillic_push_id"]
+    val agillicDeeplink = data["agillic_deep_link"]
+    val title = data["title"]
+    val body = data["body"]
+    val image = data["image"]
 }
-```
 
-##### Receiving a push notification while the application is in the background
-* Learn how to [Receive a push notification while the application is in the background](https://firebase.google.com/docs/cloud-messaging/android/receive#backgrounded)
+## Opening Push Notifications sent from Agillic
 
-When a user clicks a push notification received while the application is in the background, notification data is delivered in the extras of the intent of your launcher Activity.
+When a push notification is clicked, while the application is running, and your launcher activity is set to launchMode singleTop, the data payload will be sent to your launcher activity's onNewIntent function
 
 ```kotlin
 override fun onNewIntent(intent: Intent?) {
-    super.onNewIntent(intent)
-    val extras = intent?.extras
-    val deeplink = extras?.get("deeplink")
-}
+        super.onNewIntent(intent)
+        val extras = intent?.extras
+        val data = extras?.get("data")
+    }
+```
+
+If your launcher activity has another launch mode or if the application is not running, the data payload will be sent to your launcher activity's onCreate function
+
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val extras = intent?.extras
+        val data = extras?.get("data")
+    }
+```
+
+### Opening Push Notifications sent from Agillic
+
+The SDK can be used to track if a user has opened a Push Notification sent from Agillic. To do this, pass the push notification data payload to the handlePushNotificationOpened SDK function.
+
+```kotlin
+ override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        val extras = intent?.extras
+        val data = extras?.get("data")
+        Agillic.handlePushNotificationOpened(data)
+    }
 ```
 
 ## Handling deeplinking from Agillic
 
 _NOTE: Work in progress_
-
 
 ### App View tracking
 

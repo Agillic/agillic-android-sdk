@@ -88,7 +88,7 @@ The Agillic instance is now ready to use.
 
 _NOTE: Work in progress_
 
-Most SDK functions accepts a callback parameter which can be added in order to gain information on what's happening in the SDK and when. See the following example:
+Most SDK functions accept a callback parameter which can be added in order to gain information on what's happening in the SDK and when. See the following example:
 
 ```kotlin
 Agillic.register(
@@ -154,7 +154,7 @@ FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener {
 
 _NOTE: Work in progress_
 
-Agillic push notifications always contains a data payload. Thus the notification will always be delivered to your onMessageReceived callback in your FirebaseMessagingService implementation.
+Agillic push notifications always contain a data payload. Thus the notification will always be delivered to your onMessageReceived callback in your FirebaseMessagingService implementation.
 
 override fun onMessageReceived(remoteMessage: RemoteMessage) {
     super.onMessageReceived(remoteMessage)
@@ -178,7 +178,7 @@ override fun onNewIntent(intent: Intent?) {
     }
 ```
 
-If your launcher activity has another launch mode or if the application is not running, the data payload will be sent to your launcher activity's onCreate function
+If your launcher activity has another launchMode or if the application is not running, the data payload will be sent to your launcher activity's onCreate function
 
 ```kotlin
 override fun onCreate(savedInstanceState: Bundle?) {

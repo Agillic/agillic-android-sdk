@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 import kotlin.coroutines.suspendCoroutine
-
+import org.json.JSONObject
 
 object Agillic {
     private var agillicTracker: AgillicTrackerImpl? = null
@@ -95,8 +95,8 @@ object Agillic {
     }
 
     /** Handles push notification opened - user action for alert notifications, delivery into app. This method will parse the data and track it **/
-    fun handlePushNotificationOpened(userInfo: Any) {
-        val agillicPushId = getAgillicPushId(userInfo)
+    fun handlePushNotificationOpened(agillicPushPayload: Any) {
+        val agillicPushId = getAgillicPushId(agillicPushPayload)
         if (agillicPushId == null) {
             Logger.getLogger(this.javaClass.name).warning("Skipping non-Agillic notification")
         } else {
@@ -106,8 +106,9 @@ object Agillic {
         }
     }
 
-    private fun getAgillicPushId(userInfo: Any): String? {
-        return "" //todo
+    private fun getAgillicPushId(agillicPushPayload: Any): String? {
+        val obj = JSONObject(agillicPushPayload as String)
+        return obj.getString("agillic_push_id")
     }
 
     fun register(

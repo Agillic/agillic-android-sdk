@@ -88,6 +88,21 @@ The Agillic instance is now ready to use.
 
 _NOTE: Work in progress_
 
+All SDK functions accepts a callback parameter which can be added in order to gain information on what's happening in the SDK and when. See the following example:
+
+```kotlin
+Agillic.register(
+    recipientId = "<RECIPIENT_ID>",
+    pushNotificationToken = "<PUSH_NOTIFICATION_TOKEN>",
+    activity = this,
+    registerCallback = object : Callback {
+        override fun info(response: String) {}
+        override fun failed(response: String) {}
+        override fun success(response: String) {}
+    }
+)
+```
+
 ## Usage
 
 ### Register App Installation

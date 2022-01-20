@@ -156,6 +156,7 @@ _NOTE: Work in progress_
 
 Agillic push notifications always contain a data payload. Thus the notification will always be delivered to your onMessageReceived callback in your FirebaseMessagingService implementation.
 
+```kotlin
 override fun onMessageReceived(remoteMessage: RemoteMessage) {
     super.onMessageReceived(remoteMessage)
     val data = remoteMessage.data
@@ -165,6 +166,7 @@ override fun onMessageReceived(remoteMessage: RemoteMessage) {
     val body = data["body"]
     val image = data["image"]
 }
+```
 
 ## Opening Push Notifications sent from Agillic
 

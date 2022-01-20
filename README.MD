@@ -125,8 +125,6 @@ Each time an updated push notification token becomes available from Firebase, re
 **Prerequisites**
 * [Setup the Firebase Cloud Messaging SDK](https://firebase.google.com/docs/cloud-messaging/android/client)
 * Read the [AgillicPushNotificationSetup](docs/AgillicPushNotificationSetup.md#ReadingPushNotificationssentfromyourAgillicSolution) document to learn how to send push notifications to your Android application directly from your Agillic Solution.
-
-* Request permission for Remote Push Notifications in your App and obtain the Push Token from APNS
 _NOTE: This requires you to have already obtained the Recipient ID and that you store this across app sessions - this is currently only supported for unknown recipients._
 
 ##### Register App Installation

@@ -95,14 +95,22 @@ object Agillic {
     }
 
     /** Handles push notification opened - user action for alert notifications, delivery into app. This method will parse the data and track it **/
-    fun handlePushNotificationOpened(agillicPushPayload: Any) {
+    fun handlePushNotificationOpened(agillicPushPayload: Any, callback: Callback? = null) {
+        if (agillicTracker == null) {
+            callback?.failed("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.handlePushNotificationOpened()")
+            return
+        } else {
+            callback?.info("Handling push notification opened")
+        }
         val agillicPushId = getAgillicPushId(agillicPushPayload)
         if (agillicPushId == null) {
             Logger.getLogger(this.javaClass.name).warning("Skipping non-Agillic notification")
+            callback?.failed("Agillic push_notification_id not found in payload. Aborting event.")
         } else {
             val pushEvent =
                 AgillicAppView(screenName = "pushOpened://agillic_push_id=$agillicPushId")
             track(pushEvent)
+            callback?.success("Agillic push_notification_id: $agillicPushId found in payload. Tracking event.")
         }
     }
 

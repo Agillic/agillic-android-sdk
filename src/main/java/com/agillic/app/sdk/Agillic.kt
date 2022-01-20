@@ -251,17 +251,17 @@ object Agillic {
                                     callback?.failed("${response.code}")
                                 }
                             } catch (ignored: IOException) {
-                                Log.e("TEMP", "register exception 1: $ignored")
+                                Log.e("register", "register exception 1: $ignored")
                             }
                             Thread.sleep(sleep.toLong())
                         } catch (ignored: InterruptedException) {
-                            Log.e("TEMP", "register exception 2: $ignored")
+                            Log.e("register", "register exception 2: $ignored")
                             Thread.currentThread().interrupt()
                         }
                     }
                 }
             } catch (ex: Exception) {
-                Log.e("TEMP", "register exception 3: $ex")
+                Log.e("register", "register exception 3: $ex")
                 Log.e("register", "Failed to run registration: " + ex.message)
                 callback?.failed("Failed to run registration: " + ex.message)
             }

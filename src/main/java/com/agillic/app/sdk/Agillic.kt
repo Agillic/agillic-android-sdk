@@ -86,9 +86,7 @@ object Agillic {
 
     fun track(
         event: AgillicAppView,
-        trackingCallback: Callback? = null
     ) {
-        this.trackingCallback = trackingCallback
         if (agillicTracker == null) {
             trackingCallback?.failed("com.agillic.app.sdk.Agillic.register() must be called before com.agillic.app.sdk.Agillic.track()")
             return
@@ -116,9 +114,11 @@ object Agillic {
         recipientId: String,
         activity: Activity,
         pushNotificationToken: String? = null,
-        registerCallback: Callback? = null
+        registerCallback: Callback? = null,
+        trackingCallback: Callback? = null
     ) {
         this.registerCallback = registerCallback
+        this.trackingCallback = trackingCallback
         // Register app with SDK and return a Tracker
         if (auth == null || solutionId == null) {
             registerCallback?.failed("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")

@@ -44,7 +44,7 @@ dependencyResolutionManagement {
 ###### Add this to your build.gradle
 ```bash
 dependencies {
-    implementation 'com.github.agillic:agillic-android-sdk:0.2.5'
+    implementation 'com.github.agillic:agillic-android-sdk:0.8'
 }
 ```
 
@@ -88,7 +88,7 @@ The Agillic instance is now ready to use.
 
 _NOTE: Work in progress_
 
-All SDK functions accepts a callback parameter which can be added in order to gain information on what's happening in the SDK and when. See the following example:
+Most SDK functions accepts a callback parameter which can be added in order to gain information on what's happening in the SDK and when. See the following example:
 
 ```kotlin
 Agillic.register(

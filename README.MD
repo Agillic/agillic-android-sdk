@@ -6,10 +6,11 @@ The SDK currently includes the following functionality:
  * Register devices used by a recipient in your mobile application.
  * Register a recipient push notification token which enables your Agillic Solution to send push notifications to the recipient device.
  * Track recipient events. Tracking can be paused and resumed when requested by the user. Tracked events can be used to define [Target Groups](https://support.agillic.com/hc/en-gb/articles/360007001991-All-You-Need-to-Know-About-Target-Groups) in the Agillic Dashboard which can be used to direct targeted marketing and other communication.
+ * Track if an Agillic push notification has been opened
 
 Other useful information:
 * Read more about the Agillic Platform on the [official Agillic website](https://agillic.com).
-* And in our [Developer portal](https://developers.agillic.com).
+* And in our [developer portal](https://developers.agillic.com).
 * The Agillic SDK for iOS can be found here: [Agillic iOS SDK](https://github.com/agillic/agillic-ios-sdk/)
 
 ## Requirements
@@ -50,9 +51,9 @@ _NOTE: This is not the recommended method._
 
 * [Importing SDK manually using Android Studio](https://developer.android.com/studio/projects/android-library#psd-add-dependencies)
 
-## Initializing the Agillic SDK
+## Initializing
 
-In order to use AgillicSDK you have to initialize and configure it first.
+In order to use the SDK you have to initialize and configure it first.
 
 You can configure your Agillic instance in code using the following credentials:
 * ``AGILLIC API KEY``
@@ -62,7 +63,7 @@ You can configure your Agillic instance in code using the following credentials:
 See how to setup your Agillic Solution and obtain these values
 in the [Agillic Solution Setup Guide](docs/AgillicSolutionSetup.md).
 
-### Initialize in app
+### Initialization
 
 Start by importing the Agillic Module into your app component
 ```kotlin
@@ -83,7 +84,7 @@ The Agillic instance is now ready to use.
 
 ## Usage
 
-### Register App Installation
+### Register app Installation
 
 **Prerequisites**
 * You need to make sure to do this after `Agillic.configure()`.
@@ -91,19 +92,19 @@ The Agillic instance is now ready to use.
 * Register has to be done in your Sign Up/Sign In flow but also on you splash screen if users are automatically logged in with an Access Token.
 * ``RECIPIENT ID`` - Has to match `RECIPIENT.EMAIL` in the Agillic Recipient Table
 
-###### Register App Installation
+###### Register app installation
 ```kotlin
 Agillic.register(recipientId = "RECIPIENT ID", activity = <Activity>)
 ```
 
-### Register Push Token
+### Register push token
 
 **Prerequisites**
 * [Setup the Firebase Cloud Messaging SDK](https://firebase.google.com/docs/cloud-messaging/android/client)
 * Read the [AgillicPushNotificationSetup](docs/AgillicPushNotificationSetup.md#ReadingPushNotificationssentfromyourAgillicSolution) document to learn how to send push notifications to your Android application directly from your Agillic Solution.
 _NOTE: This requires you to have already obtained the Recipient ID and that you store this across app sessions - this is currently only supported for unknown recipients._
 
-##### Push Token should be registered along with app installation
+##### Push token should be registered along with app installation
 
 ###### When retrieving existing push token on every app launch
 ```kotlin
@@ -126,7 +127,7 @@ class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
 }
 ```
 
-## Reading Push Notifications sent from Agillic
+### Reading Push Notifications sent from Agillic
 
 _NOTE: Work in progress_
 
@@ -144,7 +145,7 @@ override fun onMessageReceived(remoteMessage: RemoteMessage) {
 }
 ```
 
-## Opening Push Notifications sent from Agillic
+### Opening Push Notifications sent from Agillic
 
 When a push notification is clicked, while the application is running, and your launcher activity is set to launchMode singleTop, the data payload will be sent to your launcher activity's onNewIntent function
 
@@ -166,7 +167,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
     }
 ```
 
-## Tracking opened push notifications with Agillic
+### Tracking opened push notifications with Agillic
 
 The SDK can be used to track if a user has opened a Push Notification sent from Agillic. To do this, pass the push notification data payload to the handlePushNotificationOpened SDK function.
 

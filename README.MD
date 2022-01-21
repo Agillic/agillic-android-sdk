@@ -167,7 +167,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
     }
 ```
 
-### Tracking opened push notifications with Agillic
+### Track opened Agillic push notifications
 
 The SDK can be used to track if a user has opened a Push Notification sent from Agillic. To do this, pass the push notification data payload to the handlePushNotificationOpened SDK function.
 
@@ -180,7 +180,7 @@ The SDK can be used to track if a user has opened a Push Notification sent from 
     }
 ```
 
-### App View tracking
+### Tracking App Views
 
 Track recipient behavior with App View Tracking
 

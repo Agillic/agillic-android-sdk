@@ -18,10 +18,6 @@ Other useful information:
 
 ## Installation
 
-See the subsections below for details about different installation methods.
-* [Add using Gradle](README.md#add-using-gradle-(recommended))
-* [Import Manually](README.md#import-manually)
-
 ### Add using Gradle (recommended)
 
 Learn how to [Add SDK as a dependency using Gradle](https://developer.android.com/studio/build/dependencies)
@@ -39,6 +35,7 @@ dependencyResolutionManagement {
         maven { url "https://jitpack.io" }
     }
 }
+
 ```
 
 ###### Add this to your build.gradle
@@ -57,7 +54,7 @@ _NOTE: This is not the recommended method._
 
 In order to use AgillicSDK you have to initialize and configure it first.
 
-You can configure your Agillic instance in code:
+You can configure your Agillic instance in code using the following credentials:
 * ``AGILLIC API KEY``
 * ``AGILLIC API SECRET``
 * ``AGILLIC SOLUTION ID``
@@ -84,25 +81,6 @@ class MyApplication : Application() {
 
 The Agillic instance is now ready to use.
 
-### Logging
-
-_NOTE: Work in progress_
-
-Most SDK functions accept a callback parameter which can be added in order to gain information on what's happening in the SDK and when. See the following example:
-
-```kotlin
-Agillic.register(
-    recipientId = "<RECIPIENT_ID>",
-    pushNotificationToken = "<PUSH_NOTIFICATION_TOKEN>",
-    activity = this,
-    registerCallback = object : Callback {
-        override fun info(response: String) {}
-        override fun failed(response: String) {}
-        override fun success(response: String) {}
-    }
-)
-```
-
 ## Usage
 
 ### Register App Installation
@@ -115,10 +93,8 @@ Agillic.register(
 
 ###### Register App Installation
 ```kotlin
-Agillic.register(recipientId = "RECIPIENT ID", activity = requireActivity())
+Agillic.register(recipientId = "RECIPIENT ID", activity = <Activity>)
 ```
-
-Each time an updated push notification token becomes available from Firebase, register() should be called again while passing the updated token.
 
 ### Register Push Token
 
@@ -127,19 +103,9 @@ Each time an updated push notification token becomes available from Firebase, re
 * Read the [AgillicPushNotificationSetup](docs/AgillicPushNotificationSetup.md#ReadingPushNotificationssentfromyourAgillicSolution) document to learn how to send push notifications to your Android application directly from your Agillic Solution.
 _NOTE: This requires you to have already obtained the Recipient ID and that you store this across app sessions - this is currently only supported for unknown recipients._
 
-##### Register App Installation
+##### Push Token should be registered along with app installation
 
-###### When new token is received
-```kotlin
-class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        Agillic.register(recipientId = "RECIPIENT ID", pushNotificationToken = token, activity = <Activity>)
-    }
-}
-```
-
-###### When existing token is received
+###### When retrieving existing push token on every app launch
 ```kotlin
 FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
     if (!task.isSuccessful) {
@@ -148,6 +114,16 @@ FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener {
     val token: String = task.result ?: return
     Agillic.register(recipientId = "RECIPIENT ID", pushNotificationToken = token, activity = <Activity>)
 })
+```
+
+###### When new push token is received from Firebase
+```kotlin
+class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        Agillic.register(recipientId = "RECIPIENT ID", pushNotificationToken = token, activity = <Activity>)
+    }
+}
 ```
 
 ## Reading Push Notifications sent from Agillic
@@ -207,7 +183,7 @@ The SDK can be used to track if a user has opened a Push Notification sent from 
 
 Track recipient behavior with App View Tracking
 
-App View Tracking is typically located in your `Activity` or `Fragment` file, but can be used elsewhere if needed.
+App View Tracking is typically done in your `Activity` or `Fragment` file, but can be used elsewhere if needed.
 
 ```kotlin
 override fun onResume() {
@@ -230,6 +206,25 @@ We suggest to use a hierarchical naming convention, prefixed with `app://` ex:
 * ``app://menu/profile/edit``
 
 _TODO: Usage in combination with 'Deeplinking' and 'Dynamic Links'_
+
+### Logging
+
+_NOTE: Work in progress_
+
+Most SDK functions accept an optional callback parameter which can be added in order to gain information on what's happening in the SDK and when. See the following example:
+
+```kotlin
+Agillic.register(
+    recipientId = "<RECIPIENT_ID>",
+    pushNotificationToken = "<PUSH_NOTIFICATION_TOKEN>",
+    activity = this,
+    registerCallback = object : Callback {
+        override fun info(response: String) {}
+        override fun failed(response: String) {}
+        override fun success(response: String) {}
+    }
+)
+```
 
 ## Questions and Issues
 

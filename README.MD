@@ -137,11 +137,11 @@ Agillic push notifications always contain a data payload. Thus the notification 
 override fun onMessageReceived(remoteMessage: RemoteMessage) {
     super.onMessageReceived(remoteMessage)
     val data = remoteMessage.data
-    val agillicPushId = data["agillic_push_id"]
-    val agillicOnClick = data["on_click"]
     val title = data["title"]
     val body = data["body"]
     val image = data["image"]
+    val agillicPushId = data["agillic_push_id"]
+    val onClick = data["on_click"]
 }
 ```
 

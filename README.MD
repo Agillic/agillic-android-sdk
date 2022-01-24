@@ -6,10 +6,11 @@ The SDK currently includes the following functionality:
  * Register devices used by a recipient in your mobile application.
  * Register a recipient push notification token which enables your Agillic Solution to send push notifications to the recipient device.
  * Track recipient events. Tracking can be paused and resumed when requested by the user. Tracked events can be used to define [Target Groups](https://support.agillic.com/hc/en-gb/articles/360007001991-All-You-Need-to-Know-About-Target-Groups) in the Agillic Dashboard which can be used to direct targeted marketing and other communication.
+ * Track if an Agillic push notification has been opened
 
 Other useful information:
 * Read more about the Agillic Platform on the [official Agillic website](https://agillic.com).
-* And in our [Developer portal](https://developers.agillic.com).
+* And in our [developer portal](https://developers.agillic.com).
 * The Agillic SDK for iOS can be found here: [Agillic iOS SDK](https://github.com/agillic/agillic-ios-sdk/)
 
 ## Requirements
@@ -18,13 +19,7 @@ Other useful information:
 
 ## Installation
 
-See the subsections below for details about different installation methods.
-* [Add using Gradle](README.md#add-using-gradle-(recommended))
-* [Import Manually](README.md#import-manually)
-
 ### Add using Gradle (recommended)
-
-[![](https://jitpack.io/v/agillic/agillic-android-sdk.svg)](https://jitpack.io/#agillic/agillic-android-sdk)
 
 Learn how to [Add SDK as a dependency using Gradle](https://developer.android.com/studio/build/dependencies)
 
@@ -41,12 +36,13 @@ dependencyResolutionManagement {
         maven { url "https://jitpack.io" }
     }
 }
+
 ```
 
 ###### Add this to your build.gradle
 ```bash
 dependencies {
-    implementation 'com.github.agillic:agillic-android-sdk:0.2.6'
+    implementation 'com.github.agillic:agillic-android-sdk:0.8'
 }
 ```
 
@@ -55,11 +51,11 @@ _NOTE: This is not the recommended method._
 
 * [Importing SDK manually using Android Studio](https://developer.android.com/studio/projects/android-library#psd-add-dependencies)
 
-## Initializing the Agillic SDK
+## Initializing
 
-In order to use AgillicSDK you have to initialize and configure it first.
+In order to use the SDK you have to initialize and configure it first.
 
-You can configure your Agillic instance in code:
+You can configure your Agillic instance in code using the following credentials:
 * ``AGILLIC API KEY``
 * ``AGILLIC API SECRET``
 * ``AGILLIC SOLUTION ID``
@@ -67,7 +63,7 @@ You can configure your Agillic instance in code:
 See how to setup your Agillic Solution and obtain these values
 in the [Agillic Solution Setup Guide](docs/AgillicSolutionSetup.md).
 
-### Initialize in app
+### Initialization
 
 Start by importing the Agillic Module into your app component
 ```kotlin
@@ -86,13 +82,9 @@ class MyApplication : Application() {
 
 The Agillic instance is now ready to use.
 
-### Logging
-
-_NOTE: Work in progress_
-
 ## Usage
 
-### Register App Installation
+### Register app Installation
 
 **Prerequisites**
 * You need to make sure to do this after `Agillic.configure()`.
@@ -100,35 +92,21 @@ _NOTE: Work in progress_
 * Register has to be done in your Sign Up/Sign In flow but also on you splash screen if users are automatically logged in with an Access Token.
 * ``RECIPIENT ID`` - Has to match `RECIPIENT.EMAIL` in the Agillic Recipient Table
 
-###### Register App Installation
+###### Register app installation
 ```kotlin
-Agillic.register(recipientId = "RECIPIENT ID", activity = requireActivity())
+Agillic.register(recipientId = "RECIPIENT ID", activity = <Activity>)
 ```
 
-Each time an updated push notification token becomes available from Firebase, register() should be called again while passing the updated token.
-
-### Register Push Token
+### Register push token
 
 **Prerequisites**
 * [Setup the Firebase Cloud Messaging SDK](https://firebase.google.com/docs/cloud-messaging/android/client)
 * Read the [AgillicPushNotificationSetup](docs/AgillicPushNotificationSetup.md#ReadingPushNotificationssentfromyourAgillicSolution) document to learn how to send push notifications to your Android application directly from your Agillic Solution.
-
-* Request permission for Remote Push Notifications in your App and obtain the Push Token from APNS
 _NOTE: This requires you to have already obtained the Recipient ID and that you store this across app sessions - this is currently only supported for unknown recipients._
 
-##### Register App Installation
+##### Push token should be registered along with app installation
 
-###### When new token is received
-```kotlin
-class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        Agillic.register(recipientId = "RECIPIENT ID", pushNotificationToken = token, activity = <Activity>)
-    }
-}
-```
-
-###### When existing token is received
+###### When retrieving existing push token on every app launch
 ```kotlin
 FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
     if (!task.isSuccessful) {
@@ -139,56 +117,83 @@ FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener {
 })
 ```
 
-### Track Push Opened 
+###### When new push token is received from Firebase
+```kotlin
+class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        Agillic.register(recipientId = "RECIPIENT ID", pushNotificationToken = token, activity = <Activity>)
+    }
+}
+```
+
+### Reading Push Notifications sent from Agillic
 
 _NOTE: Work in progress_
 
-## Reading Push Notification sent from your Agillic
-
-_NOTE: Work in progress_
-
-##### Receiving a push notification while the application is in the foreground
-* Learn how to [Receive a push notification while the application is in the foreground](https://firebase.google.com/docs/cloud-messaging/android/receive#override-onmessagereceived)
-
-There are different types of messages in FCM (Firebase Cloud Messaging):
-
-**Display Messages** does not contain a data payload and triggers a Firebase onMessageReceived() callback only when your app is in the foreground
-
-**Data Messages** contains a data payload and triggers a Firebase onMessageReceived() callback even if your app is in foreground/background/killed
+Agillic push notifications always contain a data payload. Thus the notification will always be delivered to your onMessageReceived callback in your FirebaseMessagingService implementation.
 
 ```kotlin
 override fun onMessageReceived(remoteMessage: RemoteMessage) {
     super.onMessageReceived(remoteMessage)
     val data = remoteMessage.data
-    val headline = data["headline"]
-    val message = data["message"]
-    val deeplink = data["deeplink"]
+    val agillicPushId = data["agillic_push_id"]
+    val agillicOnClick = data["on_click"]
+    val title = data["title"]
+    val body = data["body"]
+    val image = data["image"]
 }
 ```
 
-##### Receiving a push notification while the application is in the background
-* Learn how to [Receive a push notification while the application is in the background](https://firebase.google.com/docs/cloud-messaging/android/receive#backgrounded)
+### Opening Push Notifications sent from Agillic
 
-When a user clicks a push notification received while the application is in the background, notification data is delivered in the extras of the intent of your launcher Activity.
+When a push notification is clicked, while the application is running, and your launcher activity is set to launchMode singleTop, the data payload will be sent to your launcher activity's onNewIntent function
 
 ```kotlin
 override fun onNewIntent(intent: Intent?) {
-    super.onNewIntent(intent)
-    val extras = intent?.extras
-    val deeplink = extras?.get("deeplink")
-}
+        super.onNewIntent(intent)
+        val extras = intent?.extras
+        val title = extras.get("title")
+        val body = extras.get("body")
+        val image = extras.get("image")
+        val agillicPushId = extras.get("agillic_push_id")
+        val onClick = extras.get("on_click")
+    }
 ```
 
-## Handling deeplinking from Agillic
+If your launcher activity has another launchMode or if the application is not running, the data payload will be sent to your launcher activity's onCreate function
 
-_NOTE: Work in progress_
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val extras = intent?.extras
+        val title = extras.get("title")
+        val body = extras.get("body")
+        val image = extras.get("image")
+        val agillicPushId = extras.get("agillic_push_id")
+        val onClick = extras.get("on_click")
+    }
+```
 
+### Track opened Agillic push notifications
 
-### App View tracking
+The SDK can be used to track if a user has opened a Push Notification sent from Agillic. To do this, pass the push notification data payload to the handlePushNotificationOpened SDK function.
+
+```kotlin
+ override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        val extras = intent?.extras
+        if (extras != null) {
+            Agillic.handlePushNotificationOpened(extras)
+        }
+    }
+```
+
+### Tracking App Views
 
 Track recipient behavior with App View Tracking
 
-App View Tracking is typically located in your `Activity` or `Fragment` file, but can be used elsewhere if needed.
+App View Tracking is typically done in your `Activity` or `Fragment` file, but can be used elsewhere if needed.
 
 ```kotlin
 override fun onResume() {
@@ -210,7 +215,24 @@ We suggest to use a hierarchical naming convention, prefixed with `app://` ex:
 * ``app://product-offers/21``
 * ``app://menu/profile/edit``
 
-_TODO: Usage in combination with 'Deeplinking' and 'Dynamic Links'_
+### Logging
+
+_NOTE: Work in progress_
+
+Most SDK functions accept an optional callback parameter which can be added in order to gain information on what's happening in the SDK and when. See the following example:
+
+```kotlin
+Agillic.register(
+    recipientId = "<RECIPIENT_ID>",
+    pushNotificationToken = "<PUSH_NOTIFICATION_TOKEN>",
+    activity = this,
+    registerCallback = object : Callback {
+        override fun info(response: String) {}
+        override fun failed(response: String) {}
+        override fun success(response: String) {}
+    }
+)
+```
 
 ## Questions and Issues
 

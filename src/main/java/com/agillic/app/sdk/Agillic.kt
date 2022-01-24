@@ -120,12 +120,10 @@ object Agillic {
             is String -> {
                 //checks for json formatted String payload
                 val obj = JSONObject(agillicPushPayload)
-                Log.d("mikkel", "getAgillicPushId by string: $obj")
                 obj.getString("agillic_push_id")
             }
             is Bundle -> {
-                //checks for intent extras Map payload
-                Log.d("mikkel", "getAgillicPushId by map: ${agillicPushPayload as Bundle}")
+                //checks for intent extras Bundle payload
                 agillicPushPayload.getString("agillic_push_id")
             }
             else -> {

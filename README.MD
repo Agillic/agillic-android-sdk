@@ -129,8 +129,6 @@ class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
 
 ### Reading Push Notifications sent from Agillic
 
-_NOTE: Work in progress_
-
 Agillic push notifications always contain a data payload. Thus the notification will always be delivered to your onMessageReceived callback in your FirebaseMessagingService implementation.
 
 ```kotlin

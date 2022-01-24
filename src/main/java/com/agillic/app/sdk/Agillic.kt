@@ -119,12 +119,13 @@ object Agillic {
             is String -> {
                 //checks for json formatted String payload
                 val obj = JSONObject(agillicPushPayload)
+                Log.d("mikkel", "getAgillicPushId by string: $obj")
                 obj.getString("agillic_push_id")
             }
             is MutableMap<*, *> -> {
                 //checks for intent extras Map payload
                 val obj = JSONObject(agillicPushPayload)
-                Log.d("mikkel", "getAgillicPushId: $obj")
+                Log.d("mikkel", "getAgillicPushId by map: $obj")
                 obj.getString("agillic_push_id")
             }
             else -> {

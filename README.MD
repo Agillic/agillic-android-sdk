@@ -138,7 +138,7 @@ override fun onMessageReceived(remoteMessage: RemoteMessage) {
     super.onMessageReceived(remoteMessage)
     val data = remoteMessage.data
     val agillicPushId = data["agillic_push_id"]
-    val agillicDeeplink = data["agillic_deep_link"]
+    val agillicOnClick = data["on_click"]
     val title = data["title"]
     val body = data["body"]
     val image = data["image"]
@@ -153,7 +153,11 @@ When a push notification is clicked, while the application is running, and your 
 override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         val extras = intent?.extras
-        val data = extras?.get("data")
+        val title = extras.get("title")
+        val body = extras.get("body")
+        val image = extras.get("image")
+        val agillicPushId = extras.get("agillic_push_id")
+        val onClick = extras.get("on_click")
     }
 ```
 
@@ -163,7 +167,11 @@ If your launcher activity has another launchMode or if the application is not ru
 override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val extras = intent?.extras
-        val data = extras?.get("data")
+        val title = extras.get("title")
+        val body = extras.get("body")
+        val image = extras.get("image")
+        val agillicPushId = extras.get("agillic_push_id")
+        val onClick = extras.get("on_click")
     }
 ```
 
@@ -175,8 +183,9 @@ The SDK can be used to track if a user has opened a Push Notification sent from 
  override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         val extras = intent?.extras
-        val data = extras?.get("data")
-        Agillic.handlePushNotificationOpened(data)
+        if (extras != null) {
+            Agillic.handlePushNotificationOpened(extras)
+        }
     }
 ```
 
@@ -205,8 +214,6 @@ We suggest to use a hierarchical naming convention, prefixed with `app://` ex:
 * ``app://product-offers``
 * ``app://product-offers/21``
 * ``app://menu/profile/edit``
-
-_TODO: Usage in combination with 'Deeplinking' and 'Dynamic Links'_
 
 ### Logging
 

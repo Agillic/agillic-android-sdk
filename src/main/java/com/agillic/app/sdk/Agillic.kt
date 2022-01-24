@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Insets
 import android.os.Build
+import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowInsets
@@ -122,11 +123,10 @@ object Agillic {
                 Log.d("mikkel", "getAgillicPushId by string: $obj")
                 obj.getString("agillic_push_id")
             }
-            is MutableMap<*, *> -> {
+            is Bundle -> {
                 //checks for intent extras Map payload
-                val obj = JSONObject(agillicPushPayload)
-                Log.d("mikkel", "getAgillicPushId by map: $obj")
-                obj.getString("agillic_push_id")
+                Log.d("mikkel", "getAgillicPushId by map: ${agillicPushPayload as Bundle}")
+                agillicPushPayload.getString("agillic_push_id")
             }
             else -> {
                 null

@@ -115,8 +115,21 @@ object Agillic {
     }
 
     private fun getAgillicPushId(agillicPushPayload: Any): String? {
-        val obj = JSONObject(agillicPushPayload as String)
-        return obj.getString("agillic_push_id")
+        return when (agillicPushPayload) {
+            is String -> {
+                //checks for json formatted String payload
+                val obj = JSONObject(agillicPushPayload)
+                obj.getString("agillic_push_id")
+            }
+            is MutableMap<*, *> -> {
+                //checks for intent extras Map payload
+                val obj = JSONObject(agillicPushPayload)
+                obj.getString("agillic_push_id")
+            }
+            else -> {
+                null
+            }
+        }
     }
 
     fun register(

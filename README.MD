@@ -241,7 +241,7 @@ Please provide any feedback via a [GitHub Issue](https://github.com/agillic/agil
 Agillic SDK for Android is available under the Apache 2.0 license. See [LICENSE](LICENSE) file for more info.
 
 ```
-   Copyright 2021 Agillic
+   Copyright 2022 Agillic
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

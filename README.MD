@@ -126,8 +126,25 @@ class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
     }
 }
 ```
+## Reading Push Notification sent from your Agillic
 
-### Reading Push Notifications sent from Agillic
+### Track Push Opened
+
+The SDK can be used to track if a user has opened a Push Notification sent from Agillic. To do this, pass the push notification data payload to the `handlePushNotificationOpened` SDK function.
+
+```kotlin
+ override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        val extras = intent?.extras
+        if (extras != null) {
+            Agillic.handlePushNotificationOpened(extras)
+        }
+    }
+```
+
+### Read Push Payload (Handle deeplink from Agillic)
+
+###### Always
 
 Agillic push notifications always contain a data payload. Thus the notification will always be delivered to your onMessageReceived callback in your FirebaseMessagingService implementation.
 
@@ -143,7 +160,7 @@ override fun onMessageReceived(remoteMessage: RemoteMessage) {
 }
 ```
 
-### Opening Push Notifications sent from Agillic
+###### When clicked
 
 When a push notification is clicked, while the application is running, and your launcher activity is set to launchMode singleTop, the data payload will be sent to your launcher activity's onNewIntent function
 
@@ -173,19 +190,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
     }
 ```
 
-### Track opened Agillic push notifications
 
-The SDK can be used to track if a user has opened a Push Notification sent from Agillic. To do this, pass the push notification data payload to the handlePushNotificationOpened SDK function.
-
-```kotlin
- override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        val extras = intent?.extras
-        if (extras != null) {
-            Agillic.handlePushNotificationOpened(extras)
-        }
-    }
-```
 
 ### Tracking App Views
 

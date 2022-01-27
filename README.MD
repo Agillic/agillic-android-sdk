@@ -145,6 +145,8 @@ When a push notification is clicked, while the application is running, and your 
         super.onNewIntent(intent)
         // Retrieve data payload
         val extras = intent?.extras
+
+        // Retrieve each payload value (optional)
         val title = extras.get("title")
         val body = extras.get("body")
         val image = extras.get("image")
@@ -165,6 +167,8 @@ override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Retrieve data payload
         val extras = intent?.extras
+
+        // Retrieve each payload value (optional)
         val title = extras.get("title")
         val body = extras.get("body")
         val image = extras.get("image")

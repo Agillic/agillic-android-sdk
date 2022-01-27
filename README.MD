@@ -66,11 +66,13 @@ in the [Agillic Solution Setup Guide](docs/AgillicSolutionSetup.md).
 ### Initialization
 
 Start by importing the Agillic Module into your app component
+
 ```kotlin
 import Agillic
 ```
 
 Initialize and configure the Agillic SDK upon launch
+
 ```kotlin
 class MyApplication : Application() {
     override fun onCreate() {
@@ -93,6 +95,7 @@ The Agillic instance is now ready to use.
 * ``RECIPIENT ID`` - Has to match `RECIPIENT.EMAIL` in the Agillic Recipient Table
 
 ###### Register app installation
+
 ```kotlin
 Agillic.register(recipientId = "RECIPIENT ID", activity = <Activity>)
 ```
@@ -107,6 +110,7 @@ _NOTE: This requires you to have already obtained the Recipient ID and that you 
 ##### Push token should be registered along with app installation
 
 ###### When retrieving existing push token on every app launch
+
 ```kotlin
 FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
     if (!task.isSuccessful) {
@@ -118,6 +122,7 @@ FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener {
 ```
 
 ###### When new push token is received from Firebase
+
 ```kotlin
 class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
@@ -126,27 +131,57 @@ class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
     }
 }
 ```
+
 ## Reading Push Notification sent from your Agillic
 
-### Track Push Opened
+### Track Push Opened when clicked
 
-The SDK can be used to track if a user has opened a Push Notification sent from Agillic. To do this, pass the push notification data payload to the `handlePushNotificationOpened` SDK function.
+The SDK can be used to track if a user has opened a Push Notification sent from Agillic. To do this, pass the push notification data payload, received when a push notification is clicked, to the `handlePushNotificationOpened` SDK function.
+
+When a push notification is clicked, while the application is running, and your launcher activity is set to launchMode singleTop, the data payload will be sent to your launcher activity's onNewIntent function.
 
 ```kotlin
  override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        // Retrieve data payload
         val extras = intent?.extras
+        val title = extras.get("title")
+        val body = extras.get("body")
+        val image = extras.get("image")
+        val agillicPushId = extras.get("agillic_push_id")
+        val onClick = extras.get("on_click")
+
+        // Track push opened
         if (extras != null) {
             Agillic.handlePushNotificationOpened(extras)
         }
     }
 ```
 
-### Read Push Payload (Handle deeplink from Agillic)
+If your launcher activity has another launchMode or if the application is not running, the data payload will be sent to your launcher activity's onCreate function.
 
-###### Always
+```kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Retrieve data payload
+        val extras = intent?.extras
+        val title = extras.get("title")
+        val body = extras.get("body")
+        val image = extras.get("image")
+        val agillicPushId = extras.get("agillic_push_id")
+        val onClick = extras.get("on_click")
+
+        // Track push opened
+        if (extras != null) {
+            Agillic.handlePushNotificationOpened(extras)
+        }
+    }
+```
+
+### Read Push Payload when received (Handle deeplink from Agillic)
 
 Agillic push notifications always contain a data payload. Thus the notification will always be delivered to your onMessageReceived callback in your FirebaseMessagingService implementation.
+If the application receives a push notification while running in the foreground, you will need to generate your own notification in order to display it. See the sendNotification method [in the following example](https://github.com/firebase/quickstart-android/blob/320f5fb45f155de3daf8b997c3788a4a187a024d/messaging/app/src/main/java/com/google/firebase/quickstart/fcm/java/MyFirebaseMessagingService.java#L58-L101).
 
 ```kotlin
 override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -159,38 +194,6 @@ override fun onMessageReceived(remoteMessage: RemoteMessage) {
     val onClick = data["on_click"]
 }
 ```
-
-###### When clicked
-
-When a push notification is clicked, while the application is running, and your launcher activity is set to launchMode singleTop, the data payload will be sent to your launcher activity's onNewIntent function
-
-```kotlin
-override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        val extras = intent?.extras
-        val title = extras.get("title")
-        val body = extras.get("body")
-        val image = extras.get("image")
-        val agillicPushId = extras.get("agillic_push_id")
-        val onClick = extras.get("on_click")
-    }
-```
-
-If your launcher activity has another launchMode or if the application is not running, the data payload will be sent to your launcher activity's onCreate function
-
-```kotlin
-override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val extras = intent?.extras
-        val title = extras.get("title")
-        val body = extras.get("body")
-        val image = extras.get("image")
-        val agillicPushId = extras.get("agillic_push_id")
-        val onClick = extras.get("on_click")
-    }
-```
-
-
 
 ### Tracking App Views
 

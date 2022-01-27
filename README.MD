@@ -51,7 +51,7 @@ _NOTE: This is not the recommended method._
 
 * [Importing SDK manually using Android Studio](https://developer.android.com/studio/projects/android-library#psd-add-dependencies)
 
-## Initializing
+## Initializing the Agillic SDK
 
 In order to use the SDK you have to initialize and configure it first.
 

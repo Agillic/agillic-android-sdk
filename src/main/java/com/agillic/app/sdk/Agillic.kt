@@ -1,6 +1,5 @@
 package com.agillic.app.sdk
 
-import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Insets
@@ -9,6 +8,7 @@ import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.WindowInsets
+import android.view.WindowManager
 import com.agillic.app.sdk.events.AgillicAppView
 import com.snowplowanalytics.snowplow.tracker.DevicePlatforms
 import com.snowplowanalytics.snowplow.tracker.Emitter
@@ -30,13 +30,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
+import org.json.JSONObject
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 import kotlin.coroutines.suspendCoroutine
-import org.json.JSONObject
 
 object Agillic {
     private var agillicTracker: AgillicTrackerImpl? = null
@@ -134,7 +134,7 @@ object Agillic {
 
     fun register(
         recipientId: String,
-        activity: Activity,
+        context: Context,
         pushNotificationToken: String? = null,
         registerCallback: Callback? = null,
         trackingCallback: Callback? = null
@@ -146,7 +146,7 @@ object Agillic {
             registerCallback?.failed("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
             return
         }
-        val emitter: Emitter = createEmitter(collectorEndpoint, activity, trackingCallback)
+        val emitter: Emitter = createEmitter(collectorEndpoint, context, trackingCallback)
         val subject: Subject = Subject.SubjectBuilder().build()
         subject.setUserId(recipientId)
         val tracker = createSnowPlowTracker(
@@ -154,12 +154,13 @@ object Agillic {
             subject,
             "agillic",
             solutionId,
-            activity
+            context
         )
         val deviceWidth: Int
         val deviceHeight: Int
+        val windowManager: WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val windowMetrics = activity.windowManager.currentWindowMetrics
+            val windowMetrics = windowManager.currentWindowMetrics
             val insets: Insets = windowMetrics.windowInsets
                 .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
             deviceWidth = windowMetrics.bounds.width() - insets.left - insets.right
@@ -168,17 +169,17 @@ object Agillic {
             val outMetrics = DisplayMetrics()
 
             @Suppress("DEPRECATION")
-            val display = activity.windowManager.defaultDisplay
+            val display = windowManager.defaultDisplay
             @Suppress("DEPRECATION")
             display.getMetrics(outMetrics)
             deviceWidth = outMetrics.widthPixels
             deviceHeight = outMetrics.heightPixels
         }
 
-        val deviceInfo = Util.getMobileContext(activity)
+        val deviceInfo = Util.getMobileContext(context)
         val clientAppVersion: String = try {
-            activity.packageManager
-                .getPackageInfo(activity.packageName, 0).versionName
+            context.packageManager
+                .getPackageInfo(context.packageName, 0).versionName
         } catch (e: PackageManager.NameNotFoundException) {
             e.printStackTrace()
             "NA"
@@ -186,7 +187,7 @@ object Agillic {
         ioScope.launch {
             register(
                 tracker,
-                activity.packageName,
+                context.packageName,
                 clientAppVersion,
                 recipientId,
                 auth,

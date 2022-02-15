@@ -192,6 +192,9 @@ object Agillic {
                     solutionId,
                     context
                 )
+                while (tracker.session?.waitForSessionFileLoad() == false) {
+                    Logger.getLogger(this.javaClass.name).warning("Session still not loaded")
+                }
                 agillicTracker = AgillicTrackerImpl(tracker)
                 tracker.session.userId
             }
@@ -261,18 +264,13 @@ object Agillic {
         vararg urls: String
     ) {
         suspendCoroutine<String> { continuation ->
-            val callback: Callback?
-            when (registrationAction) {
+            val callback: Callback? = when (registrationAction) {
                 RegistrationActionEnum.REGISTER -> {
-                    callback = registerCallback
-                    while (agillicTracker?.tracker?.session?.waitForSessionFileLoad() == false) {
-                        Logger.getLogger(this.javaClass.name).warning("Session still not loaded")
-                    }
+                    registerCallback
                 }
                 RegistrationActionEnum.UNREGISTER -> {
-                    callback = unregisterCallback
+                    unregisterCallback
                 }
-
             }
             try {
                 urls.forEachIndexed { _, url ->

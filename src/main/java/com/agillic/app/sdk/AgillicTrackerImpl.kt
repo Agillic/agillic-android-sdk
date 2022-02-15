@@ -1,7 +1,7 @@
 package com.agillic.app.sdk
 import com.snowplowanalytics.snowplow.tracker.Tracker
 
-class AgillicTrackerImpl(private val tracker: Tracker) :
+class AgillicTrackerImpl(val tracker: Tracker) :
     AgillicTracker {
     private var disabled = false
 

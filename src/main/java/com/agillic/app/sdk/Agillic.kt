@@ -50,6 +50,7 @@ object Agillic {
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val uiScope = CoroutineScope(Dispatchers.Main + job)
     private var registerCallback: Callback? = null
+    private var unregisterCallback: Callback? = null
     private var trackingCallback: Callback? = null
 
     private var solutionId: String? = null
@@ -132,6 +133,25 @@ object Agillic {
         }
     }
 
+    fun unregister(
+        recipientId: String,
+        context: Context,
+        pushNotificationToken: String? = null,
+        unregisterCallback: Callback? = null
+    ) {
+        this.unregisterCallback = unregisterCallback
+        if (sdkConfigured().not()) {
+            unregisterCallback?.failed("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.unregister()")
+            return
+        }
+        handleRegistration(
+            RegistrationActionEnum.UNREGISTER,
+            recipientId,
+            context,
+            pushNotificationToken
+        )
+    }
+
     fun register(
         recipientId: String,
         context: Context,
@@ -141,24 +161,50 @@ object Agillic {
     ) {
         this.registerCallback = registerCallback
         this.trackingCallback = trackingCallback
-        // Register app with SDK and return a Tracker
-        if (auth == null || solutionId == null) {
-            registerCallback?.failed("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.Register()")
+        if (sdkConfigured().not()) {
+            registerCallback?.failed("com.agillic.app.sdk.Agillic.configure() must be called before com.agillic.app.sdk.Agillic.register()")
             return
         }
-        val emitter: Emitter = createEmitter(collectorEndpoint, context, trackingCallback)
-        val subject: Subject = Subject.SubjectBuilder().build()
-        subject.setUserId(recipientId)
-        val tracker = createSnowPlowTracker(
-            emitter,
-            subject,
-            "agillic",
-            solutionId,
-            context
+        handleRegistration(
+            RegistrationActionEnum.REGISTER,
+            recipientId,
+            context,
+            pushNotificationToken
         )
+    }
+
+    private fun handleRegistration(
+        registrationAction: RegistrationActionEnum,
+        recipientId: String,
+        context: Context,
+        pushNotificationToken: String?
+    ) {
+        val sessionUserId = when (registrationAction) {
+            RegistrationActionEnum.REGISTER -> {
+                val emitter: Emitter =
+                    createEmitter(collectorEndpoint, context, trackingCallback)
+                val subject: Subject = Subject.SubjectBuilder().build()
+                subject.setUserId(recipientId)
+                val tracker = createSnowPlowTracker(
+                    emitter,
+                    subject,
+                    "agillic",
+                    solutionId,
+                    context
+                )
+                agillicTracker = AgillicTrackerImpl(tracker)
+                tracker.session.userId
+            }
+            RegistrationActionEnum.UNREGISTER -> {
+                agillicTracker = null
+                Tracker.instance().session.userId
+            }
+        }
+
         val deviceWidth: Int
         val deviceHeight: Int
-        val windowManager: WindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val windowManager: WindowManager =
+            context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val windowMetrics = windowManager.currentWindowMetrics
             val insets: Insets = windowMetrics.windowInsets
@@ -167,7 +213,6 @@ object Agillic {
             deviceHeight = windowMetrics.bounds.height() - insets.top - insets.bottom
         } else {
             val outMetrics = DisplayMetrics()
-
             @Suppress("DEPRECATION")
             val display = windowManager.defaultDisplay
             @Suppress("DEPRECATION")
@@ -175,7 +220,6 @@ object Agillic {
             deviceWidth = outMetrics.widthPixels
             deviceHeight = outMetrics.heightPixels
         }
-
         val deviceInfo = Util.getMobileContext(context)
         val clientAppVersion: String = try {
             context.packageManager
@@ -185,8 +229,8 @@ object Agillic {
             "NA"
         }
         ioScope.launch {
-            register(
-                tracker,
+            handleRegistrationAsync(
+                sessionUserId,
                 context.packageName,
                 clientAppVersion,
                 recipientId,
@@ -195,15 +239,16 @@ object Agillic {
                 deviceInfo,
                 deviceWidth,
                 deviceHeight,
-                url,
-                callback = registerCallback
+                registrationAction,
+                url
             )
         }
-        agillicTracker = AgillicTrackerImpl(tracker)
     }
 
-    private suspend fun register(
-        tracker: Tracker,
+    private fun sdkConfigured() = auth != null && solutionId != null
+
+    private suspend fun handleRegistrationAsync(
+        sessionUserId: String,
         clientAppId: String?,
         clientAppVersion: String?,
         userId: String,
@@ -212,16 +257,26 @@ object Agillic {
         deviceInfo: SelfDescribingJson,
         deviceWidth: Int?,
         deviceHeight: Int?,
-        vararg urls: String,
-        callback: Callback?
+        registrationAction: RegistrationActionEnum,
+        vararg urls: String
     ) {
         suspendCoroutine<String> { continuation ->
-            while (!tracker.session.waitForSessionFileLoad()) {
-                Logger.getLogger(this.javaClass.name).warning("Session still not loaded")
+            val callback: Callback?
+            when (registrationAction) {
+                RegistrationActionEnum.REGISTER -> {
+                    callback = registerCallback
+                    while (agillicTracker?.tracker?.session?.waitForSessionFileLoad() == false) {
+                        Logger.getLogger(this.javaClass.name).warning("Session still not loaded")
+                    }
+                }
+                RegistrationActionEnum.UNREGISTER -> {
+                    callback = unregisterCallback
+                }
+
             }
             try {
                 urls.forEachIndexed { _, url ->
-                    val requestUrl = "$url/register/$userId"
+                    val requestUrl = "$url/${registrationAction.value}/$userId"
                     val client = createHttpClient()
                     val request = Request.Builder().url(requestUrl)
                         .addHeader("Authorization", auth!!.getAuth()).put(object : RequestBody() {
@@ -245,7 +300,7 @@ object Agillic {
                                             "  \"modelDimX\": %d,\n" +
                                             "  \"modelDimY\": %d\n" +
                                             "}\n",
-                                    tracker.session.userId,
+                                    sessionUserId,
                                     emptyIfNull(clientAppId),
                                     emptyIfNull(clientAppVersion),
                                     Util.getOsType(),
@@ -255,7 +310,7 @@ object Agillic {
                                     deviceWidth,
                                     deviceHeight
                                 )
-                                Log.d("register", "$requestUrl : $json")
+                                Log.d(registrationAction.value, "$requestUrl : $json")
                                 callback?.info("$requestUrl : $json")
                                 sink.write(json.toByteArray())
                             }
@@ -266,7 +321,7 @@ object Agillic {
                         try {
                             try {
                                 val response = client.newCall(request).execute()
-                                Log.i("register", "register: " + response.code + " ")
+                                Log.i(registrationAction.value, "${registrationAction.value}: " + response.code + " ")
                                 if (response.isSuccessful) {
                                     callback?.success("${response.code}")
                                     retries = 0
@@ -274,21 +329,21 @@ object Agillic {
                                     callback?.failed("${response.code}")
                                 }
                             } catch (ignored: IOException) {
-                                Log.e("register", "register exception 1: $ignored")
+                                Log.e(registrationAction.value, "${registrationAction.value} exception 1: $ignored")
                             }
                             Thread.sleep(sleep.toLong())
                         } catch (ignored: InterruptedException) {
-                            Log.e("register", "register exception 2: $ignored")
+                            Log.e(registrationAction.value, "${registrationAction.value} exception 2: $ignored")
                             Thread.currentThread().interrupt()
                         }
                     }
                 }
             } catch (ex: Exception) {
-                Log.e("register", "register exception 3: $ex")
-                Log.e("register", "Failed to run registration: " + ex.message)
-                callback?.failed("Failed to run registration: " + ex.message)
+                Log.e(registrationAction.value, "${registrationAction.value} exception 3: $ex")
+                Log.e(registrationAction.value, "Failed to run ${registrationAction.value}: " + ex.message)
+                callback?.failed("Failed to run ${registrationAction.value}: " + ex.message)
             }
-            Log.d("register", "Stopping registration.")
+            Log.d(registrationAction.value, "Stopping ${registrationAction.value}.")
         }
     }
 

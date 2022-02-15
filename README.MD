@@ -132,6 +132,14 @@ class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
 }
 ```
 
+### Unregister Push Token
+
+If you wish to remove a push token from an Agillic Recipient, you can use the `unregister` function. This should be done when a user is logging out of your app.
+
+```kotlin
+Agillic.unregister(recipientId = "RECIPIENT ID", pushNotificationToken = pushToken, context = context)
+```
+
 ## Reading Push Notification sent from your Agillic
 
 ### Track Push Opened when clicked

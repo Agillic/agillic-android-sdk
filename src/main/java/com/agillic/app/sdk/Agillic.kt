@@ -45,7 +45,7 @@ object Agillic {
     private var collectorEndpoint = "snowplowtrack-eu1.agillic.net"
     private val service: ExecutorService? = null
     private var auth: BasicAuth? = null
-    private const val apiUrlFormat = "https://api%s-eu1.agillic.net"
+    private const val apiUrlFormat = "https://api%s-eu1.agillic.net/apps"
     private val job = Job()
     private val ioScope = CoroutineScope(Dispatchers.IO + job)
     private val uiScope = CoroutineScope(Dispatchers.Main + job)

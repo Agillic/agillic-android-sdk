@@ -11,6 +11,7 @@ The SDK currently includes the following functionality:
 Other useful information:
 * Read more about the Agillic Platform on the [official Agillic website](https://agillic.com).
 * And in our [developer portal](https://developers.agillic.com).
+* [Agillic Help Center](https://support.agillic.com/)
 * The Agillic SDK for iOS can be found here: [Agillic iOS SDK](https://github.com/agillic/agillic-ios-sdk/)
 
 ## Requirements
@@ -92,7 +93,7 @@ The Agillic instance is now ready to use.
 * You need to make sure to do this after `Agillic.configure()`.
 * You must do this upon every launch before doing any [App View Tracking](README.md#app-view-tracking). 
 * Register has to be done in your Sign Up/Sign In flow but also on you splash screen if users are automatically logged in with an Access Token.
-* ``RECIPIENT ID`` - Has to match `RECIPIENT.EMAIL` in the Agillic Recipient Table
+* ``RECIPIENT ID`` - Has to match the selected ID of the Reicipeint in Agillic. [Read how to change the RecipientID](https://support.agillic.com/hc/en-gb/articles/360014805631-How-to-Change-the-Recipient-ID)
 
 ###### Register app installation
 

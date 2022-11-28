@@ -1,5 +1,8 @@
 # Agillic SDK for Android
 
+> __Please note__ The app SDK will be deprecated with the release of 23.0 in January 2023.  
+> Use the [Register API](https://developers.agillic.com/apis/register-api#) instead
+
 The Agillic SDK enables you to utilize the Agillic platform from within your Android App.
 The SDK currently includes the following functionality:
 
